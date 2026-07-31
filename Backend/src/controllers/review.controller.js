@@ -11,12 +11,17 @@ function wrap(handler) {
   }
 }
 
+<<<<<<< HEAD
 export const listReviews = wrap(async (req, res) => {
   sendSuccess(res, { reviews: await reviewService.listOrderReviews(req.query) })
 })
 
 export const getPublicReviews = wrap(async (req, res) => {
   sendSuccess(res, await reviewService.getPublicReviews(req.query))
+=======
+export const listReviews = wrap(async (_req, res) => {
+  sendSuccess(res, { reviews: await reviewService.listOrderReviews() })
+>>>>>>> af8c361 (Add review management functionality with database integration)
 })
 
 export const updateReview = wrap(async (req, res) => {
