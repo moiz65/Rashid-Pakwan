@@ -4,7 +4,7 @@ dist/
 *.log
 .cursor/
 Resturant_Ordering_Management/
-Backend/uploads/*
+# Backend/uploads/*
 !Backend/uploads/.gitkeep
 /rashid_pakwan.sql
 
