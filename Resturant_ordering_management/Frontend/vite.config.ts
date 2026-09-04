@@ -16,11 +16,11 @@ export default defineConfig({
     server: {
       proxy: {
         "/api": {
-          target: "https://red-yak-928925.hostingersite.com",
+          target: "http://localhost:5000",
           changeOrigin: true,
         },
         "/uploads": {
-          target: "https://red-yak-928925.hostingersite.com",
+          target: "http://localhost:5000",
           changeOrigin: true,
         },
       },
