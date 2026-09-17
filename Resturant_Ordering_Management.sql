@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: Aug 26, 2026 at 10:29 PM
+-- Host: 127.0.0.1
+-- Generation Time: Sep 10, 2026 at 09:31 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `Resturant_Ordering_Management`
+-- Database: `resturant_ordering_management`
 --
 
 -- --------------------------------------------------------
@@ -90,7 +90,8 @@ CREATE TABLE `branches` (
 --
 
 INSERT INTO `branches` (`id`, `name`, `code`, `city`, `address`, `phone`, `manager`, `hours`, `status`, `is_primary`, `created_at`, `updated_at`) VALUES
-('br_xyz_karachi', 'XYZ Kitchen', 'XYZ', 'Karachi', '12 Saddar Bazaar, Karachi', '+92 21 111 2000', 'Ahmed Khan', '11:00 AM – 11:00 PM', 'active', 1, '2026-08-19 21:22:18', '2026-08-19 21:22:18');
+('br_1788026544351_51d763a8', 'DHA', 'DHA', 'karachi', 'xyz address', '03181210257', 'AMK', '', 'active', 0, '2026-08-29 23:02:24', '2026-08-29 23:02:24'),
+('br_xyz_karachi', 'North Nazimabad', 'NN', 'Karachi', 'Blcok H 33/16 FC Area karachi', '+92 21 111 2000', 'Ahmed Khan', '11:00 AM – 11:00 PM', 'active', 1, '2026-08-19 21:22:18', '2026-08-29 21:42:15');
 
 -- --------------------------------------------------------
 
@@ -130,7 +131,7 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `slug`, `created_at`, `updated_at`, `image`, `sort_order`, `is_visible`, `branch_id`) VALUES
-('cat_1787775352385_fbec603b', 'Test', 'test', '2026-08-27 01:15:52', '2026-08-27 01:15:52', '', 1, 1, 'br_xyz_karachi');
+('cat_1788026843015_bc30e498', 'Burgers', 'burgers', '2026-08-29 23:07:23', '2026-08-29 23:07:23', '', 0, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -172,6 +173,13 @@ CREATE TABLE `customers` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `customers`
+--
+
+INSERT INTO `customers` (`id`, `name`, `email`, `phone`, `total_orders`, `spent`, `joined_at`, `branch_id`, `created_at`, `updated_at`) VALUES
+('16468347-97c1-40d0-92ac-3d188ec2e221', 'Mr. Abdul Moiz', 'digious.moiz@gmail.com', '23142314', 2, 441.50, '2026-08-29 23:22:06', 'br_1788026544351_51d763a8', '2026-08-29 23:22:06', '2026-08-29 23:23:18');
+
 -- --------------------------------------------------------
 
 --
@@ -203,13 +211,6 @@ CREATE TABLE `deals` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `deals`
---
-
-INSERT INTO `deals` (`id`, `title`, `description`, `badge_text`, `image`, `price`, `original_price`, `tax_code_id`, `tax_mode`, `start_at`, `end_at`, `days_of_week`, `daily_start_time`, `daily_end_time`, `show_countdown`, `active`, `sort_order`, `addon_mode`, `addon_ids`, `branch_id`, `created_at`, `updated_at`) VALUES
-('deal_1787775895916_e563d465', 'test-deal1', 'test-deal1', '', '', 3500.00, 4150.00, 'tax_1787775402786_4774c68c', 'exclusive', '2026-08-02 19:00:00', '2026-08-31 18:59:59', NULL, '00:00:00', '23:59:00', 1, 1, 0, 'all', NULL, 'br_xyz_karachi', '2026-08-27 01:24:55', '2026-08-27 01:24:55');
-
 -- --------------------------------------------------------
 
 --
@@ -231,14 +232,6 @@ CREATE TABLE `deal_items` (
   `sort_order` int(11) NOT NULL DEFAULT 0,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `deal_items`
---
-
-INSERT INTO `deal_items` (`id`, `deal_id`, `item_type`, `product_id`, `drink_id`, `addon_id`, `name`, `qty`, `unit_price`, `customer_choice`, `choice_ids`, `sort_order`, `created_at`) VALUES
-('di_1787775895915_3a4ffda0', 'deal_1787775895916_e563d465', 'product', 'prod_1787775448310_18ef2916', NULL, NULL, 'test-zinger', 2, 2000.00, 0, NULL, 0, '2026-08-27 01:24:55'),
-('di_1787775895915_5afb7bce', 'deal_1787775895916_e563d465', 'drink', NULL, NULL, NULL, 'Choose your drink', 1, 150.00, 1, '[\"drink_1787775712791_e63c9fd6\"]', 1, '2026-08-27 01:24:56');
 
 -- --------------------------------------------------------
 
@@ -527,6 +520,534 @@ INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort
 ('da_1787249357022_510a2e8e_yaseenabad', 'br_1787249357022_510a2e8e', 'Yaseenabad', 'yaseenabad', 149.00, 261, 1, '2026-08-26 23:15:05', '2026-08-26 23:15:05'),
 ('da_1787249357022_510a2e8e_zamzama', 'br_1787249357022_510a2e8e', 'Zamzama', 'zamzama', 149.00, 262, 1, '2026-08-26 23:15:05', '2026-08-26 23:15:05'),
 ('da_1787249357022_510a2e8e_ziauddin_hospital', 'br_1787249357022_510a2e8e', 'Ziauddin Hospital', 'ziauddin_hospital', 149.00, 263, 1, '2026-08-26 23:15:05', '2026-08-26 23:15:05'),
+('da_1788020777098_a34fe512_abdullah_goth', 'br_1788020777098_a34fe512', 'Abdullah Goth', 'abdullah_goth', 149.00, 1, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_abul_hassan_isphahani_road', 'br_1788020777098_a34fe512', 'Abul Hassan Isphahani Road', 'abul_hassan_isphahani_road', 149.00, 2, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_airport', 'br_1788020777098_a34fe512', 'Airport', 'airport', 149.00, 3, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_akhtar_colony', 'br_1788020777098_a34fe512', 'Akhtar Colony', 'akhtar_colony', 149.00, 4, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_al_falah_society', 'br_1788020777098_a34fe512', 'Al-Falah Society', 'al_falah_society', 149.00, 5, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_al_hilal_society', 'br_1788020777098_a34fe512', 'Al-Hilal Society', 'al_hilal_society', 149.00, 6, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_allah_wala_town', 'br_1788020777098_a34fe512', 'Allah Wala Town', 'allah_wala_town', 149.00, 7, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_ancholi', 'br_1788020777098_a34fe512', 'Ancholi', 'ancholi', 149.00, 8, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_ashraf_nagar', 'br_1788020777098_a34fe512', 'Ashraf Nagar', 'ashraf_nagar', 149.00, 9, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_askari_1', 'br_1788020777098_a34fe512', 'Askari 1', 'askari_1', 149.00, 10, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_askari_2', 'br_1788020777098_a34fe512', 'Askari 2', 'askari_2', 149.00, 11, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_askari_3', 'br_1788020777098_a34fe512', 'Askari 3', 'askari_3', 149.00, 12, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_askari_4', 'br_1788020777098_a34fe512', 'Askari 4', 'askari_4', 149.00, 13, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_askari_5', 'br_1788020777098_a34fe512', 'Askari 5', 'askari_5', 149.00, 14, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_ayesha_manzil', 'br_1788020777098_a34fe512', 'Ayesha Manzil', 'ayesha_manzil', 149.00, 15, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_azam_basti', 'br_1788020777098_a34fe512', 'Azam Basti', 'azam_basti', 149.00, 16, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_azam_town', 'br_1788020777098_a34fe512', 'Azam Town', 'azam_town', 149.00, 17, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_baba_wilayat_shah_colony', 'br_1788020777098_a34fe512', 'Baba Wilayat Shah Colony', 'baba_wilayat_shah_colony', 149.00, 28, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_babar_market', 'br_1788020777098_a34fe512', 'Babar Market', 'babar_market', 149.00, 18, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bachayo_narain', 'br_1788020777098_a34fe512', 'Bachayo Narain', 'bachayo_narain', 149.00, 19, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bagh_e_korangi', 'br_1788020777098_a34fe512', 'Bagh e Korangi', 'bagh_e_korangi', 149.00, 20, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bahadurabad', 'br_1788020777098_a34fe512', 'Bahadurabad', 'bahadurabad', 149.00, 21, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48');
+INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort_order`, `enabled`, `created_at`, `updated_at`) VALUES
+('da_1788020777098_a34fe512_bahria_town_karachi', 'br_1788020777098_a34fe512', 'Bahria Town Karachi', 'bahria_town_karachi', 149.00, 22, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_baldia_town', 'br_1788020777098_a34fe512', 'Baldia Town', 'baldia_town', 149.00, 23, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_baloch_colony', 'br_1788020777098_a34fe512', 'Baloch Colony', 'baloch_colony', 149.00, 24, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_banaras_colony', 'br_1788020777098_a34fe512', 'Banaras Colony', 'banaras_colony', 149.00, 25, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bandhani_colony', 'br_1788020777098_a34fe512', 'Bandhani Colony', 'bandhani_colony', 149.00, 26, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bath_island', 'br_1788020777098_a34fe512', 'Bath Island', 'bath_island', 149.00, 27, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_beacon_house', 'br_1788020777098_a34fe512', 'Beacon House', 'beacon_house', 149.00, 29, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bhadur_colony', 'br_1788020777098_a34fe512', 'Bhadur Colony', 'bhadur_colony', 149.00, 30, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bhittaiabad', 'br_1788020777098_a34fe512', 'Bhittaiabad', 'bhittaiabad', 149.00, 31, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bihar_colony', 'br_1788020777098_a34fe512', 'Bihar Colony', 'bihar_colony', 149.00, 32, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bizm_e_alam_society', 'br_1788020777098_a34fe512', 'Bizm-e-Alam Society', 'bizm_e_alam_society', 149.00, 33, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_1_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 1 Gulshan-e-Iqbal', 'block_1_gulshan_e_iqbal', 149.00, 34, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_10_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 10 Gulshan-e-Iqbal', 'block_10_gulshan_e_iqbal', 149.00, 43, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_11_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 11 Gulshan-e-Iqbal', 'block_11_gulshan_e_iqbal', 149.00, 44, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_12_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 12 Gulshan-e-Iqbal', 'block_12_gulshan_e_iqbal', 149.00, 45, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_13_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 13 Gulshan-e-Iqbal', 'block_13_gulshan_e_iqbal', 149.00, 46, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_14_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 14 Gulshan-e-Iqbal', 'block_14_gulshan_e_iqbal', 149.00, 47, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_15_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 15 Gulshan-e-Iqbal', 'block_15_gulshan_e_iqbal', 149.00, 48, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_16_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 16 Gulshan-e-Iqbal', 'block_16_gulshan_e_iqbal', 149.00, 49, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_17_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 17 Gulshan-e-Iqbal', 'block_17_gulshan_e_iqbal', 149.00, 50, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_18_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 18 Gulshan-e-Iqbal', 'block_18_gulshan_e_iqbal', 149.00, 51, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_2_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 2 Gulshan-e-Iqbal', 'block_2_gulshan_e_iqbal', 149.00, 35, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_3_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 3 Gulshan-e-Iqbal', 'block_3_gulshan_e_iqbal', 149.00, 36, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_4_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 4 Gulshan-e-Iqbal', 'block_4_gulshan_e_iqbal', 149.00, 37, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_5_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 5 Gulshan-e-Iqbal', 'block_5_gulshan_e_iqbal', 149.00, 38, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_6_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 6 Gulshan-e-Iqbal', 'block_6_gulshan_e_iqbal', 149.00, 39, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_7_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 7 Gulshan-e-Iqbal', 'block_7_gulshan_e_iqbal', 149.00, 40, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_8_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 8 Gulshan-e-Iqbal', 'block_8_gulshan_e_iqbal', 149.00, 41, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_block_9_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Block 9 Gulshan-e-Iqbal', 'block_9_gulshan_e_iqbal', 149.00, 42, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_bufferzone', 'br_1788020777098_a34fe512', 'Bufferzone', 'bufferzone', 149.00, 52, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_burns_road', 'br_1788020777098_a34fe512', 'Burns Road', 'burns_road', 149.00, 53, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_cantonment', 'br_1788020777098_a34fe512', 'Cantonment', 'cantonment', 149.00, 54, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_chakra_goth', 'br_1788020777098_a34fe512', 'Chakra Goth', 'chakra_goth', 149.00, 55, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_civil_lines', 'br_1788020777098_a34fe512', 'Civil Lines', 'civil_lines', 149.00, 56, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_1', 'br_1788020777098_a34fe512', 'Clifton Block 1', 'clifton_block_1', 149.00, 57, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_2', 'br_1788020777098_a34fe512', 'Clifton Block 2', 'clifton_block_2', 149.00, 58, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_3', 'br_1788020777098_a34fe512', 'Clifton Block 3', 'clifton_block_3', 149.00, 59, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_4', 'br_1788020777098_a34fe512', 'Clifton Block 4', 'clifton_block_4', 149.00, 60, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_5', 'br_1788020777098_a34fe512', 'Clifton Block 5', 'clifton_block_5', 149.00, 61, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_6', 'br_1788020777098_a34fe512', 'Clifton Block 6', 'clifton_block_6', 149.00, 62, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_7', 'br_1788020777098_a34fe512', 'Clifton Block 7', 'clifton_block_7', 149.00, 63, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_8', 'br_1788020777098_a34fe512', 'Clifton Block 8', 'clifton_block_8', 149.00, 64, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_clifton_block_9', 'br_1788020777098_a34fe512', 'Clifton Block 9', 'clifton_block_9', 149.00, 65, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_darakhshan_society', 'br_1788020777098_a34fe512', 'Darakhshan Society', 'darakhshan_society', 149.00, 75, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_darul_aman_society', 'br_1788020777098_a34fe512', 'Darul Aman Society', 'darul_aman_society', 149.00, 76, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dastagir', 'br_1788020777098_a34fe512', 'Dastagir', 'dastagir', 149.00, 77, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_defence_view', 'br_1788020777098_a34fe512', 'Defence View', 'defence_view', 149.00, 78, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_delhi_colony', 'br_1788020777098_a34fe512', 'Delhi Colony', 'delhi_colony', 149.00, 79, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_1', 'br_1788020777098_a34fe512', 'DHA Phase 1', 'dha_phase_1', 149.00, 66, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_2', 'br_1788020777098_a34fe512', 'DHA Phase 2', 'dha_phase_2', 149.00, 67, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_2_extension', 'br_1788020777098_a34fe512', 'DHA Phase 2 Extension', 'dha_phase_2_extension', 149.00, 68, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_4', 'br_1788020777098_a34fe512', 'DHA Phase 4', 'dha_phase_4', 149.00, 69, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_5', 'br_1788020777098_a34fe512', 'DHA Phase 5', 'dha_phase_5', 149.00, 70, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_5_extension', 'br_1788020777098_a34fe512', 'DHA Phase 5 Extension', 'dha_phase_5_extension', 149.00, 71, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_6', 'br_1788020777098_a34fe512', 'DHA Phase 6', 'dha_phase_6', 149.00, 72, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_7', 'br_1788020777098_a34fe512', 'DHA Phase 7', 'dha_phase_7', 149.00, 73, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dha_phase_8', 'br_1788020777098_a34fe512', 'DHA Phase 8', 'dha_phase_8', 149.00, 74, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_dhoraji_colony', 'br_1788020777098_a34fe512', 'Dhoraji Colony', 'dhoraji_colony', 149.00, 80, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_do_talwar', 'br_1788020777098_a34fe512', 'Do Talwar', 'do_talwar', 149.00, 81, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_drigh_road', 'br_1788020777098_a34fe512', 'Drigh Road', 'drigh_road', 149.00, 82, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_eid_gah', 'br_1788020777098_a34fe512', 'Eid Gah', 'eid_gah', 149.00, 83, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_1', 'br_1788020777098_a34fe512', 'F.B. Area Block 1', 'f_b_area_block_1', 149.00, 84, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_10', 'br_1788020777098_a34fe512', 'F.B. Area Block 10', 'f_b_area_block_10', 149.00, 93, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_11', 'br_1788020777098_a34fe512', 'F.B. Area Block 11', 'f_b_area_block_11', 149.00, 94, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_12', 'br_1788020777098_a34fe512', 'F.B. Area Block 12', 'f_b_area_block_12', 149.00, 95, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_13', 'br_1788020777098_a34fe512', 'F.B. Area Block 13', 'f_b_area_block_13', 149.00, 96, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_14', 'br_1788020777098_a34fe512', 'F.B. Area Block 14', 'f_b_area_block_14', 149.00, 97, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_15', 'br_1788020777098_a34fe512', 'F.B. Area Block 15', 'f_b_area_block_15', 149.00, 98, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_16', 'br_1788020777098_a34fe512', 'F.B. Area Block 16', 'f_b_area_block_16', 149.00, 99, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_17', 'br_1788020777098_a34fe512', 'F.B. Area Block 17', 'f_b_area_block_17', 149.00, 100, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_18', 'br_1788020777098_a34fe512', 'F.B. Area Block 18', 'f_b_area_block_18', 149.00, 101, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_19', 'br_1788020777098_a34fe512', 'F.B. Area Block 19', 'f_b_area_block_19', 149.00, 102, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_2', 'br_1788020777098_a34fe512', 'F.B. Area Block 2', 'f_b_area_block_2', 149.00, 85, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_20', 'br_1788020777098_a34fe512', 'F.B. Area Block 20', 'f_b_area_block_20', 149.00, 103, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_21', 'br_1788020777098_a34fe512', 'F.B. Area Block 21', 'f_b_area_block_21', 149.00, 104, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_f_b_area_block_3', 'br_1788020777098_a34fe512', 'F.B. Area Block 3', 'f_b_area_block_3', 149.00, 86, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_4', 'br_1788020777098_a34fe512', 'F.B. Area Block 4', 'f_b_area_block_4', 149.00, 87, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_5', 'br_1788020777098_a34fe512', 'F.B. Area Block 5', 'f_b_area_block_5', 149.00, 88, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_6', 'br_1788020777098_a34fe512', 'F.B. Area Block 6', 'f_b_area_block_6', 149.00, 89, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_7', 'br_1788020777098_a34fe512', 'F.B. Area Block 7', 'f_b_area_block_7', 149.00, 90, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_8', 'br_1788020777098_a34fe512', 'F.B. Area Block 8', 'f_b_area_block_8', 149.00, 91, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_f_b_area_block_9', 'br_1788020777098_a34fe512', 'F.B. Area Block 9', 'f_b_area_block_9', 149.00, 92, 1, '2026-08-29 23:14:48', '2026-08-29 23:14:48'),
+('da_1788020777098_a34fe512_faisal_cantonment', 'br_1788020777098_a34fe512', 'Faisal Cantonment', 'faisal_cantonment', 149.00, 105, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_farooq_e_azam', 'br_1788020777098_a34fe512', 'Farooq-e-Azam', 'farooq_e_azam', 149.00, 106, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_federal_b_area', 'br_1788020777098_a34fe512', 'Federal B Area', 'federal_b_area', 149.00, 107, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_frere_town', 'br_1788020777098_a34fe512', 'Frere Town', 'frere_town', 149.00, 108, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_garden_east', 'br_1788020777098_a34fe512', 'Garden East', 'garden_east', 149.00, 109, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_garden_west', 'br_1788020777098_a34fe512', 'Garden West', 'garden_west', 149.00, 110, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gharibabad', 'br_1788020777098_a34fe512', 'Gharibabad', 'gharibabad', 149.00, 111, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gizri', 'br_1788020777098_a34fe512', 'Gizri', 'gizri', 149.00, 112, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gizri_boulevard', 'br_1788020777098_a34fe512', 'Gizri Boulevard', 'gizri_boulevard', 149.00, 113, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulbahar', 'br_1788020777098_a34fe512', 'Gulbahar', 'gulbahar', 149.00, 114, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulberg', 'br_1788020777098_a34fe512', 'Gulberg', 'gulberg', 149.00, 115, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_1', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 1', 'gulistan_e_johar_block_1', 149.00, 116, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_10', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 10', 'gulistan_e_johar_block_10', 149.00, 125, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_11', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 11', 'gulistan_e_johar_block_11', 149.00, 126, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_12', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 12', 'gulistan_e_johar_block_12', 149.00, 127, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_13', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 13', 'gulistan_e_johar_block_13', 149.00, 128, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_14', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 14', 'gulistan_e_johar_block_14', 149.00, 129, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_15', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 15', 'gulistan_e_johar_block_15', 149.00, 130, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_16', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 16', 'gulistan_e_johar_block_16', 149.00, 131, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_17', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 17', 'gulistan_e_johar_block_17', 149.00, 132, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_18', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 18', 'gulistan_e_johar_block_18', 149.00, 133, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_19', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 19', 'gulistan_e_johar_block_19', 149.00, 134, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_2', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 2', 'gulistan_e_johar_block_2', 149.00, 117, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_3', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 3', 'gulistan_e_johar_block_3', 149.00, 118, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_4', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 4', 'gulistan_e_johar_block_4', 149.00, 119, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_5', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 5', 'gulistan_e_johar_block_5', 149.00, 120, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_6', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 6', 'gulistan_e_johar_block_6', 149.00, 121, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_7', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 7', 'gulistan_e_johar_block_7', 149.00, 122, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_8', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 8', 'gulistan_e_johar_block_8', 149.00, 123, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulistan_e_johar_block_9', 'br_1788020777098_a34fe512', 'Gulistan-e-Johar Block 9', 'gulistan_e_johar_block_9', 149.00, 124, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulshan_e_hadeed', 'br_1788020777098_a34fe512', 'Gulshan-e-Hadeed', 'gulshan_e_hadeed', 149.00, 135, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulshan_e_iqbal', 'br_1788020777098_a34fe512', 'Gulshan-e-Iqbal', 'gulshan_e_iqbal', 149.00, 136, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulshan_e_jamal', 'br_1788020777098_a34fe512', 'Gulshan-e-Jamal', 'gulshan_e_jamal', 149.00, 137, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulshan_e_maymar', 'br_1788020777098_a34fe512', 'Gulshan-e-Maymar', 'gulshan_e_maymar', 149.00, 138, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_gulzar_e_hijri', 'br_1788020777098_a34fe512', 'Gulzar-e-Hijri', 'gulzar_e_hijri', 149.00, 139, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_habib_bank_plaza', 'br_1788020777098_a34fe512', 'Habib Bank Plaza', 'habib_bank_plaza', 149.00, 140, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_hajiyani_goth', 'br_1788020777098_a34fe512', 'Hajiyani Goth', 'hajiyani_goth', 149.00, 141, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_harbour_front', 'br_1788020777098_a34fe512', 'Harbour Front', 'harbour_front', 149.00, 142, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_hill_park', 'br_1788020777098_a34fe512', 'Hill Park', 'hill_park', 149.00, 143, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_holy_family', 'br_1788020777098_a34fe512', 'Holy Family', 'holy_family', 149.00, 144, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_hussainabad', 'br_1788020777098_a34fe512', 'Hussainabad', 'hussainabad', 149.00, 145, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_hyderi', 'br_1788020777098_a34fe512', 'Hyderi', 'hyderi', 149.00, 146, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_i_i_chundrigar_road', 'br_1788020777098_a34fe512', 'I.I. Chundrigar Road', 'i_i_chundrigar_road', 149.00, 147, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_ibrahim_hyderi', 'br_1788020777098_a34fe512', 'Ibrahim Hyderi', 'ibrahim_hyderi', 149.00, 148, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_jamshed_quarters', 'br_1788020777098_a34fe512', 'Jamshed Quarters', 'jamshed_quarters', 149.00, 149, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_jauhar_chowrangi', 'br_1788020777098_a34fe512', 'Jauhar Chowrangi', 'jauhar_chowrangi', 149.00, 150, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_jinnah_terminal', 'br_1788020777098_a34fe512', 'Jinnah Terminal', 'jinnah_terminal', 149.00, 151, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_johar_complex', 'br_1788020777098_a34fe512', 'Johar Complex', 'johar_complex', 149.00, 152, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_kda_scheme_1', 'br_1788020777098_a34fe512', 'KDA Scheme 1', 'kda_scheme_1', 149.00, 153, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_kda_scheme_33', 'br_1788020777098_a34fe512', 'KDA Scheme 33', 'kda_scheme_33', 149.00, 154, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_keamari', 'br_1788020777098_a34fe512', 'Keamari', 'keamari', 149.00, 155, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_kehkashan', 'br_1788020777098_a34fe512', 'Kehkashan', 'kehkashan', 149.00, 156, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_khadda_market', 'br_1788020777098_a34fe512', 'Khadda Market', 'khadda_market', 149.00, 157, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_kharadar', 'br_1788020777098_a34fe512', 'Kharadar', 'kharadar', 149.00, 158, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_khudadad_colony', 'br_1788020777098_a34fe512', 'Khudadad Colony', 'khudadad_colony', 149.00, 159, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi', 'br_1788020777098_a34fe512', 'Korangi', 'korangi', 149.00, 160, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_crossing', 'br_1788020777098_a34fe512', 'Korangi Crossing', 'korangi_crossing', 149.00, 161, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_industrial_area', 'br_1788020777098_a34fe512', 'Korangi Industrial Area', 'korangi_industrial_area', 149.00, 162, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_31', 'br_1788020777098_a34fe512', 'Korangi Sector 31', 'korangi_sector_31', 149.00, 163, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_32', 'br_1788020777098_a34fe512', 'Korangi Sector 32', 'korangi_sector_32', 149.00, 164, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_33', 'br_1788020777098_a34fe512', 'Korangi Sector 33', 'korangi_sector_33', 149.00, 165, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_34', 'br_1788020777098_a34fe512', 'Korangi Sector 34', 'korangi_sector_34', 149.00, 166, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_35', 'br_1788020777098_a34fe512', 'Korangi Sector 35', 'korangi_sector_35', 149.00, 167, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_korangi_sector_36', 'br_1788020777098_a34fe512', 'Korangi Sector 36', 'korangi_sector_36', 149.00, 168, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_landhi', 'br_1788020777098_a34fe512', 'Landhi', 'landhi', 149.00, 169, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_liaquatabad', 'br_1788020777098_a34fe512', 'Liaquatabad', 'liaquatabad', 149.00, 170, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_lines_area', 'br_1788020777098_a34fe512', 'Lines Area', 'lines_area', 149.00, 171, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_lyari', 'br_1788020777098_a34fe512', 'Lyari', 'lyari', 149.00, 172, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_malir', 'br_1788020777098_a34fe512', 'Malir', 'malir', 149.00, 173, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_malir_cantonment', 'br_1788020777098_a34fe512', 'Malir Cantonment', 'malir_cantonment', 149.00, 174, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_malir_halt', 'br_1788020777098_a34fe512', 'Malir Halt', 'malir_halt', 149.00, 175, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_manzoor_colony', 'br_1788020777098_a34fe512', 'Manzoor Colony', 'manzoor_colony', 149.00, 176, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_maripur', 'br_1788020777098_a34fe512', 'Maripur', 'maripur', 149.00, 177, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_mehmoodabad', 'br_1788020777098_a34fe512', 'Mehmoodabad', 'mehmoodabad', 149.00, 178, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_metroville', 'br_1788020777098_a34fe512', 'Metroville', 'metroville', 149.00, 179, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_millat_nagar', 'br_1788020777098_a34fe512', 'Millat Nagar', 'millat_nagar', 149.00, 180, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_model_colony', 'br_1788020777098_a34fe512', 'Model Colony', 'model_colony', 149.00, 181, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_moinabad', 'br_1788020777098_a34fe512', 'Moinabad', 'moinabad', 149.00, 182, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_mujahid_colony', 'br_1788020777098_a34fe512', 'Mujahid Colony', 'mujahid_colony', 149.00, 183, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_muslim_town', 'br_1788020777098_a34fe512', 'Muslim Town', 'muslim_town', 149.00, 185, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_muslimabad', 'br_1788020777098_a34fe512', 'Muslimabad', 'muslimabad', 149.00, 184, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_national_stadium', 'br_1788020777098_a34fe512', 'National Stadium', 'national_stadium', 149.00, 186, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_1', 'br_1788020777098_a34fe512', 'Nazimabad 1', 'nazimabad_1', 149.00, 187, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_2', 'br_1788020777098_a34fe512', 'Nazimabad 2', 'nazimabad_2', 149.00, 188, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_3', 'br_1788020777098_a34fe512', 'Nazimabad 3', 'nazimabad_3', 149.00, 189, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_4', 'br_1788020777098_a34fe512', 'Nazimabad 4', 'nazimabad_4', 149.00, 190, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_5', 'br_1788020777098_a34fe512', 'Nazimabad 5', 'nazimabad_5', 149.00, 191, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_6', 'br_1788020777098_a34fe512', 'Nazimabad 6', 'nazimabad_6', 149.00, 192, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nazimabad_7', 'br_1788020777098_a34fe512', 'Nazimabad 7', 'nazimabad_7', 149.00, 193, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_new_karachi', 'br_1788020777098_a34fe512', 'New Karachi', 'new_karachi', 149.00, 194, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_new_town', 'br_1788020777098_a34fe512', 'New Town', 'new_town', 149.00, 195, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_nishat_commercial', 'br_1788020777098_a34fe512', 'Nishat Commercial', 'nishat_commercial', 149.00, 196, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_karachi', 'br_1788020777098_a34fe512', 'North Karachi', 'north_karachi', 149.00, 197, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_a', 'br_1788020777098_a34fe512', 'North Nazimabad Block A', 'north_nazimabad_block_a', 149.00, 198, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_b', 'br_1788020777098_a34fe512', 'North Nazimabad Block B', 'north_nazimabad_block_b', 149.00, 199, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_c', 'br_1788020777098_a34fe512', 'North Nazimabad Block C', 'north_nazimabad_block_c', 149.00, 200, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_d', 'br_1788020777098_a34fe512', 'North Nazimabad Block D', 'north_nazimabad_block_d', 149.00, 201, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_e', 'br_1788020777098_a34fe512', 'North Nazimabad Block E', 'north_nazimabad_block_e', 149.00, 202, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_f', 'br_1788020777098_a34fe512', 'North Nazimabad Block F', 'north_nazimabad_block_f', 149.00, 203, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_g', 'br_1788020777098_a34fe512', 'North Nazimabad Block G', 'north_nazimabad_block_g', 149.00, 204, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_h', 'br_1788020777098_a34fe512', 'North Nazimabad Block H', 'north_nazimabad_block_h', 149.00, 205, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_i', 'br_1788020777098_a34fe512', 'North Nazimabad Block I', 'north_nazimabad_block_i', 149.00, 206, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_j', 'br_1788020777098_a34fe512', 'North Nazimabad Block J', 'north_nazimabad_block_j', 149.00, 207, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_k', 'br_1788020777098_a34fe512', 'North Nazimabad Block K', 'north_nazimabad_block_k', 149.00, 208, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_l', 'br_1788020777098_a34fe512', 'North Nazimabad Block L', 'north_nazimabad_block_l', 149.00, 209, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_m', 'br_1788020777098_a34fe512', 'North Nazimabad Block M', 'north_nazimabad_block_m', 149.00, 210, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_n', 'br_1788020777098_a34fe512', 'North Nazimabad Block N', 'north_nazimabad_block_n', 149.00, 211, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_o', 'br_1788020777098_a34fe512', 'North Nazimabad Block O', 'north_nazimabad_block_o', 149.00, 212, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_p', 'br_1788020777098_a34fe512', 'North Nazimabad Block P', 'north_nazimabad_block_p', 149.00, 213, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_q', 'br_1788020777098_a34fe512', 'North Nazimabad Block Q', 'north_nazimabad_block_q', 149.00, 214, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_r', 'br_1788020777098_a34fe512', 'North Nazimabad Block R', 'north_nazimabad_block_r', 149.00, 215, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_s', 'br_1788020777098_a34fe512', 'North Nazimabad Block S', 'north_nazimabad_block_s', 149.00, 216, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_north_nazimabad_block_t', 'br_1788020777098_a34fe512', 'North Nazimabad Block T', 'north_nazimabad_block_t', 149.00, 217, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_old_town', 'br_1788020777098_a34fe512', 'Old Town', 'old_town', 149.00, 218, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_orangi_town', 'br_1788020777098_a34fe512', 'Orangi Town', 'orangi_town', 149.00, 219, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_1', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 1', 'p_e_c_h_s_block_1', 149.00, 220, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_2', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 2', 'p_e_c_h_s_block_2', 149.00, 221, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_3', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 3', 'p_e_c_h_s_block_3', 149.00, 222, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_4', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 4', 'p_e_c_h_s_block_4', 149.00, 223, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_5', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 5', 'p_e_c_h_s_block_5', 149.00, 224, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_p_e_c_h_s_block_6', 'br_1788020777098_a34fe512', 'P.E.C.H.S Block 6', 'p_e_c_h_s_block_6', 149.00, 225, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_pakistan_chowk', 'br_1788020777098_a34fe512', 'Pakistan Chowk', 'pakistan_chowk', 149.00, 226, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_paposh_nagar', 'br_1788020777098_a34fe512', 'Paposh Nagar', 'paposh_nagar', 149.00, 227, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_paradise_point', 'br_1788020777098_a34fe512', 'Paradise Point', 'paradise_point', 149.00, 228, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_patel_para', 'br_1788020777098_a34fe512', 'Patel Para', 'patel_para', 149.00, 229, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_pechs', 'br_1788020777098_a34fe512', 'Pechs', 'pechs', 149.00, 230, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_pns_karsaz', 'br_1788020777098_a34fe512', 'PNS Karsaz', 'pns_karsaz', 149.00, 231, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_port_qasim', 'br_1788020777098_a34fe512', 'Port Qasim', 'port_qasim', 149.00, 232, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_qayyumabad', 'br_1788020777098_a34fe512', 'Qayyumabad', 'qayyumabad', 149.00, 233, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_railway_colony', 'br_1788020777098_a34fe512', 'Railway Colony', 'railway_colony', 149.00, 234, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_ranchore_line', 'br_1788020777098_a34fe512', 'Ranchore Line', 'ranchore_line', 149.00, 235, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_rashid_minhas_road', 'br_1788020777098_a34fe512', 'Rashid Minhas Road', 'rashid_minhas_road', 149.00, 236, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_rehmani_goth', 'br_1788020777098_a34fe512', 'Rehmani Goth', 'rehmani_goth', 149.00, 237, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_rizvia_society', 'br_1788020777098_a34fe512', 'Rizvia Society', 'rizvia_society', 149.00, 238, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_saddar', 'br_1788020777098_a34fe512', 'Saddar', 'saddar', 149.00, 239, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_safoora_goth', 'br_1788020777098_a34fe512', 'Safoora Goth', 'safoora_goth', 149.00, 240, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_sakhi_hassan', 'br_1788020777098_a34fe512', 'Sakhi Hassan', 'sakhi_hassan', 149.00, 241, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shah_faisal_colony', 'br_1788020777098_a34fe512', 'Shah Faisal Colony', 'shah_faisal_colony', 149.00, 242, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shah_latif_town', 'br_1788020777098_a34fe512', 'Shah Latif Town', 'shah_latif_town', 149.00, 243, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shahrah_e_faisal', 'br_1788020777098_a34fe512', 'Shahrah-e-Faisal', 'shahrah_e_faisal', 149.00, 244, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shahrah_e_quaideen', 'br_1788020777098_a34fe512', 'Shahrah-e-Quaideen', 'shahrah_e_quaideen', 149.00, 245, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_sharafi_goth', 'br_1788020777098_a34fe512', 'Sharafi Goth', 'sharafi_goth', 149.00, 246, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_sharfabad', 'br_1788020777098_a34fe512', 'Sharfabad', 'sharfabad', 149.00, 247, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shepherd_street', 'br_1788020777098_a34fe512', 'Shepherd Street', 'shepherd_street', 149.00, 248, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_shipowner_college', 'br_1788020777098_a34fe512', 'Shipowner College', 'shipowner_college', 149.00, 249, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_sindhi_muslim_society', 'br_1788020777098_a34fe512', 'Sindhi Muslim Society', 'sindhi_muslim_society', 149.00, 250, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_sohrab_goth', 'br_1788020777098_a34fe512', 'Sohrab Goth', 'sohrab_goth', 149.00, 251, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_soldier_bazaar', 'br_1788020777098_a34fe512', 'Soldier Bazaar', 'soldier_bazaar', 149.00, 252, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_star_gate', 'br_1788020777098_a34fe512', 'Star Gate', 'star_gate', 149.00, 253, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_steel_town', 'br_1788020777098_a34fe512', 'Steel Town', 'steel_town', 149.00, 254, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_super_highway', 'br_1788020777098_a34fe512', 'Super Highway', 'super_highway', 149.00, 255, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_surjani_town', 'br_1788020777098_a34fe512', 'Surjani Town', 'surjani_town', 149.00, 256, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_tariq_road', 'br_1788020777098_a34fe512', 'Tariq Road', 'tariq_road', 149.00, 257, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_tipu_sultan_road', 'br_1788020777098_a34fe512', 'Tipu Sultan Road', 'tipu_sultan_road', 149.00, 258, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_university_road', 'br_1788020777098_a34fe512', 'University Road', 'university_road', 149.00, 259, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_water_pump', 'br_1788020777098_a34fe512', 'Water Pump', 'water_pump', 149.00, 260, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_yaseenabad', 'br_1788020777098_a34fe512', 'Yaseenabad', 'yaseenabad', 149.00, 261, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_zamzama', 'br_1788020777098_a34fe512', 'Zamzama', 'zamzama', 149.00, 262, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788020777098_a34fe512_ziauddin_hospital', 'br_1788020777098_a34fe512', 'Ziauddin Hospital', 'ziauddin_hospital', 149.00, 263, 1, '2026-08-29 23:14:49', '2026-08-29 23:14:49'),
+('da_1788026544351_51d763a8_abdullah_goth', 'br_1788026544351_51d763a8', 'Abdullah Goth', 'abdullah_goth', 149.00, 1, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_abul_hassan_isphahani_road', 'br_1788026544351_51d763a8', 'Abul Hassan Isphahani Road', 'abul_hassan_isphahani_road', 149.00, 2, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_airport', 'br_1788026544351_51d763a8', 'Airport', 'airport', 149.00, 3, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_akhtar_colony', 'br_1788026544351_51d763a8', 'Akhtar Colony', 'akhtar_colony', 149.00, 4, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_al_falah_society', 'br_1788026544351_51d763a8', 'Al-Falah Society', 'al_falah_society', 149.00, 5, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_al_hilal_society', 'br_1788026544351_51d763a8', 'Al-Hilal Society', 'al_hilal_society', 149.00, 6, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_allah_wala_town', 'br_1788026544351_51d763a8', 'Allah Wala Town', 'allah_wala_town', 149.00, 7, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_ancholi', 'br_1788026544351_51d763a8', 'Ancholi', 'ancholi', 149.00, 8, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_ashraf_nagar', 'br_1788026544351_51d763a8', 'Ashraf Nagar', 'ashraf_nagar', 149.00, 9, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_askari_1', 'br_1788026544351_51d763a8', 'Askari 1', 'askari_1', 149.00, 10, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_askari_2', 'br_1788026544351_51d763a8', 'Askari 2', 'askari_2', 149.00, 11, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_askari_3', 'br_1788026544351_51d763a8', 'Askari 3', 'askari_3', 149.00, 12, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_askari_4', 'br_1788026544351_51d763a8', 'Askari 4', 'askari_4', 149.00, 13, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_askari_5', 'br_1788026544351_51d763a8', 'Askari 5', 'askari_5', 149.00, 14, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_ayesha_manzil', 'br_1788026544351_51d763a8', 'Ayesha Manzil', 'ayesha_manzil', 149.00, 15, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_azam_basti', 'br_1788026544351_51d763a8', 'Azam Basti', 'azam_basti', 149.00, 16, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_azam_town', 'br_1788026544351_51d763a8', 'Azam Town', 'azam_town', 149.00, 17, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_baba_wilayat_shah_colony', 'br_1788026544351_51d763a8', 'Baba Wilayat Shah Colony', 'baba_wilayat_shah_colony', 149.00, 28, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_babar_market', 'br_1788026544351_51d763a8', 'Babar Market', 'babar_market', 149.00, 18, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bachayo_narain', 'br_1788026544351_51d763a8', 'Bachayo Narain', 'bachayo_narain', 149.00, 19, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bagh_e_korangi', 'br_1788026544351_51d763a8', 'Bagh e Korangi', 'bagh_e_korangi', 149.00, 20, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bahadurabad', 'br_1788026544351_51d763a8', 'Bahadurabad', 'bahadurabad', 149.00, 21, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bahria_town_karachi', 'br_1788026544351_51d763a8', 'Bahria Town Karachi', 'bahria_town_karachi', 149.00, 22, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_baldia_town', 'br_1788026544351_51d763a8', 'Baldia Town', 'baldia_town', 149.00, 23, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_baloch_colony', 'br_1788026544351_51d763a8', 'Baloch Colony', 'baloch_colony', 149.00, 24, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_banaras_colony', 'br_1788026544351_51d763a8', 'Banaras Colony', 'banaras_colony', 149.00, 25, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bandhani_colony', 'br_1788026544351_51d763a8', 'Bandhani Colony', 'bandhani_colony', 149.00, 26, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bath_island', 'br_1788026544351_51d763a8', 'Bath Island', 'bath_island', 149.00, 27, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_beacon_house', 'br_1788026544351_51d763a8', 'Beacon House', 'beacon_house', 149.00, 29, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bhadur_colony', 'br_1788026544351_51d763a8', 'Bhadur Colony', 'bhadur_colony', 149.00, 30, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bhittaiabad', 'br_1788026544351_51d763a8', 'Bhittaiabad', 'bhittaiabad', 149.00, 31, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bihar_colony', 'br_1788026544351_51d763a8', 'Bihar Colony', 'bihar_colony', 149.00, 32, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bizm_e_alam_society', 'br_1788026544351_51d763a8', 'Bizm-e-Alam Society', 'bizm_e_alam_society', 149.00, 33, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_1_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 1 Gulshan-e-Iqbal', 'block_1_gulshan_e_iqbal', 149.00, 34, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_10_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 10 Gulshan-e-Iqbal', 'block_10_gulshan_e_iqbal', 149.00, 43, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_11_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 11 Gulshan-e-Iqbal', 'block_11_gulshan_e_iqbal', 149.00, 44, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_12_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 12 Gulshan-e-Iqbal', 'block_12_gulshan_e_iqbal', 149.00, 45, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_13_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 13 Gulshan-e-Iqbal', 'block_13_gulshan_e_iqbal', 149.00, 46, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_14_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 14 Gulshan-e-Iqbal', 'block_14_gulshan_e_iqbal', 149.00, 47, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_15_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 15 Gulshan-e-Iqbal', 'block_15_gulshan_e_iqbal', 149.00, 48, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_16_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 16 Gulshan-e-Iqbal', 'block_16_gulshan_e_iqbal', 149.00, 49, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_17_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 17 Gulshan-e-Iqbal', 'block_17_gulshan_e_iqbal', 149.00, 50, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_18_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 18 Gulshan-e-Iqbal', 'block_18_gulshan_e_iqbal', 149.00, 51, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03');
+INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort_order`, `enabled`, `created_at`, `updated_at`) VALUES
+('da_1788026544351_51d763a8_block_2_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 2 Gulshan-e-Iqbal', 'block_2_gulshan_e_iqbal', 149.00, 35, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_3_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 3 Gulshan-e-Iqbal', 'block_3_gulshan_e_iqbal', 149.00, 36, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_4_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 4 Gulshan-e-Iqbal', 'block_4_gulshan_e_iqbal', 149.00, 37, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_5_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 5 Gulshan-e-Iqbal', 'block_5_gulshan_e_iqbal', 149.00, 38, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_6_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 6 Gulshan-e-Iqbal', 'block_6_gulshan_e_iqbal', 149.00, 39, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_7_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 7 Gulshan-e-Iqbal', 'block_7_gulshan_e_iqbal', 149.00, 40, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_8_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 8 Gulshan-e-Iqbal', 'block_8_gulshan_e_iqbal', 149.00, 41, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_block_9_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Block 9 Gulshan-e-Iqbal', 'block_9_gulshan_e_iqbal', 149.00, 42, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_bufferzone', 'br_1788026544351_51d763a8', 'Bufferzone', 'bufferzone', 149.00, 52, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_burns_road', 'br_1788026544351_51d763a8', 'Burns Road', 'burns_road', 149.00, 53, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_cantonment', 'br_1788026544351_51d763a8', 'Cantonment', 'cantonment', 149.00, 54, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_chakra_goth', 'br_1788026544351_51d763a8', 'Chakra Goth', 'chakra_goth', 149.00, 55, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_civil_lines', 'br_1788026544351_51d763a8', 'Civil Lines', 'civil_lines', 149.00, 56, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_1', 'br_1788026544351_51d763a8', 'Clifton Block 1', 'clifton_block_1', 149.00, 57, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_2', 'br_1788026544351_51d763a8', 'Clifton Block 2', 'clifton_block_2', 149.00, 58, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_3', 'br_1788026544351_51d763a8', 'Clifton Block 3', 'clifton_block_3', 149.00, 59, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_4', 'br_1788026544351_51d763a8', 'Clifton Block 4', 'clifton_block_4', 149.00, 60, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_5', 'br_1788026544351_51d763a8', 'Clifton Block 5', 'clifton_block_5', 149.00, 61, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_6', 'br_1788026544351_51d763a8', 'Clifton Block 6', 'clifton_block_6', 149.00, 62, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_7', 'br_1788026544351_51d763a8', 'Clifton Block 7', 'clifton_block_7', 149.00, 63, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_8', 'br_1788026544351_51d763a8', 'Clifton Block 8', 'clifton_block_8', 149.00, 64, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_clifton_block_9', 'br_1788026544351_51d763a8', 'Clifton Block 9', 'clifton_block_9', 149.00, 65, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_darakhshan_society', 'br_1788026544351_51d763a8', 'Darakhshan Society', 'darakhshan_society', 149.00, 75, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_darul_aman_society', 'br_1788026544351_51d763a8', 'Darul Aman Society', 'darul_aman_society', 149.00, 76, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dastagir', 'br_1788026544351_51d763a8', 'Dastagir', 'dastagir', 149.00, 77, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_defence_view', 'br_1788026544351_51d763a8', 'Defence View', 'defence_view', 149.00, 78, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_delhi_colony', 'br_1788026544351_51d763a8', 'Delhi Colony', 'delhi_colony', 149.00, 79, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_1', 'br_1788026544351_51d763a8', 'DHA Phase 1', 'dha_phase_1', 149.00, 66, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_2', 'br_1788026544351_51d763a8', 'DHA Phase 2', 'dha_phase_2', 149.00, 67, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_2_extension', 'br_1788026544351_51d763a8', 'DHA Phase 2 Extension', 'dha_phase_2_extension', 149.00, 68, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_4', 'br_1788026544351_51d763a8', 'DHA Phase 4', 'dha_phase_4', 149.00, 69, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_5', 'br_1788026544351_51d763a8', 'DHA Phase 5', 'dha_phase_5', 149.00, 70, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_5_extension', 'br_1788026544351_51d763a8', 'DHA Phase 5 Extension', 'dha_phase_5_extension', 149.00, 71, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_6', 'br_1788026544351_51d763a8', 'DHA Phase 6', 'dha_phase_6', 149.00, 72, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_7', 'br_1788026544351_51d763a8', 'DHA Phase 7', 'dha_phase_7', 149.00, 73, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dha_phase_8', 'br_1788026544351_51d763a8', 'DHA Phase 8', 'dha_phase_8', 149.00, 74, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_dhoraji_colony', 'br_1788026544351_51d763a8', 'Dhoraji Colony', 'dhoraji_colony', 149.00, 80, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_do_talwar', 'br_1788026544351_51d763a8', 'Do Talwar', 'do_talwar', 149.00, 81, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_drigh_road', 'br_1788026544351_51d763a8', 'Drigh Road', 'drigh_road', 149.00, 82, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_eid_gah', 'br_1788026544351_51d763a8', 'Eid Gah', 'eid_gah', 149.00, 83, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_1', 'br_1788026544351_51d763a8', 'F.B. Area Block 1', 'f_b_area_block_1', 149.00, 84, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_10', 'br_1788026544351_51d763a8', 'F.B. Area Block 10', 'f_b_area_block_10', 149.00, 93, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_11', 'br_1788026544351_51d763a8', 'F.B. Area Block 11', 'f_b_area_block_11', 149.00, 94, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_12', 'br_1788026544351_51d763a8', 'F.B. Area Block 12', 'f_b_area_block_12', 149.00, 95, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_13', 'br_1788026544351_51d763a8', 'F.B. Area Block 13', 'f_b_area_block_13', 149.00, 96, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_14', 'br_1788026544351_51d763a8', 'F.B. Area Block 14', 'f_b_area_block_14', 149.00, 97, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_15', 'br_1788026544351_51d763a8', 'F.B. Area Block 15', 'f_b_area_block_15', 149.00, 98, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_16', 'br_1788026544351_51d763a8', 'F.B. Area Block 16', 'f_b_area_block_16', 149.00, 99, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_17', 'br_1788026544351_51d763a8', 'F.B. Area Block 17', 'f_b_area_block_17', 149.00, 100, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_18', 'br_1788026544351_51d763a8', 'F.B. Area Block 18', 'f_b_area_block_18', 149.00, 101, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_19', 'br_1788026544351_51d763a8', 'F.B. Area Block 19', 'f_b_area_block_19', 149.00, 102, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_2', 'br_1788026544351_51d763a8', 'F.B. Area Block 2', 'f_b_area_block_2', 149.00, 85, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_20', 'br_1788026544351_51d763a8', 'F.B. Area Block 20', 'f_b_area_block_20', 149.00, 103, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_21', 'br_1788026544351_51d763a8', 'F.B. Area Block 21', 'f_b_area_block_21', 149.00, 104, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_3', 'br_1788026544351_51d763a8', 'F.B. Area Block 3', 'f_b_area_block_3', 149.00, 86, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_4', 'br_1788026544351_51d763a8', 'F.B. Area Block 4', 'f_b_area_block_4', 149.00, 87, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_5', 'br_1788026544351_51d763a8', 'F.B. Area Block 5', 'f_b_area_block_5', 149.00, 88, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_6', 'br_1788026544351_51d763a8', 'F.B. Area Block 6', 'f_b_area_block_6', 149.00, 89, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_7', 'br_1788026544351_51d763a8', 'F.B. Area Block 7', 'f_b_area_block_7', 149.00, 90, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_8', 'br_1788026544351_51d763a8', 'F.B. Area Block 8', 'f_b_area_block_8', 149.00, 91, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_f_b_area_block_9', 'br_1788026544351_51d763a8', 'F.B. Area Block 9', 'f_b_area_block_9', 149.00, 92, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_faisal_cantonment', 'br_1788026544351_51d763a8', 'Faisal Cantonment', 'faisal_cantonment', 149.00, 105, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_farooq_e_azam', 'br_1788026544351_51d763a8', 'Farooq-e-Azam', 'farooq_e_azam', 149.00, 106, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_federal_b_area', 'br_1788026544351_51d763a8', 'Federal B Area', 'federal_b_area', 149.00, 107, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_frere_town', 'br_1788026544351_51d763a8', 'Frere Town', 'frere_town', 149.00, 108, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_garden_east', 'br_1788026544351_51d763a8', 'Garden East', 'garden_east', 149.00, 109, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_garden_west', 'br_1788026544351_51d763a8', 'Garden West', 'garden_west', 149.00, 110, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gharibabad', 'br_1788026544351_51d763a8', 'Gharibabad', 'gharibabad', 149.00, 111, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gizri', 'br_1788026544351_51d763a8', 'Gizri', 'gizri', 149.00, 112, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gizri_boulevard', 'br_1788026544351_51d763a8', 'Gizri Boulevard', 'gizri_boulevard', 149.00, 113, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulbahar', 'br_1788026544351_51d763a8', 'Gulbahar', 'gulbahar', 149.00, 114, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulberg', 'br_1788026544351_51d763a8', 'Gulberg', 'gulberg', 149.00, 115, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_1', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 1', 'gulistan_e_johar_block_1', 149.00, 116, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_10', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 10', 'gulistan_e_johar_block_10', 149.00, 125, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_11', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 11', 'gulistan_e_johar_block_11', 149.00, 126, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_12', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 12', 'gulistan_e_johar_block_12', 149.00, 127, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_13', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 13', 'gulistan_e_johar_block_13', 149.00, 128, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_14', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 14', 'gulistan_e_johar_block_14', 149.00, 129, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_15', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 15', 'gulistan_e_johar_block_15', 149.00, 130, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_16', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 16', 'gulistan_e_johar_block_16', 149.00, 131, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_17', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 17', 'gulistan_e_johar_block_17', 149.00, 132, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_18', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 18', 'gulistan_e_johar_block_18', 149.00, 133, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_19', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 19', 'gulistan_e_johar_block_19', 149.00, 134, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_2', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 2', 'gulistan_e_johar_block_2', 149.00, 117, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_3', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 3', 'gulistan_e_johar_block_3', 149.00, 118, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_4', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 4', 'gulistan_e_johar_block_4', 149.00, 119, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_5', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 5', 'gulistan_e_johar_block_5', 149.00, 120, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_6', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 6', 'gulistan_e_johar_block_6', 149.00, 121, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_7', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 7', 'gulistan_e_johar_block_7', 149.00, 122, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_8', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 8', 'gulistan_e_johar_block_8', 149.00, 123, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulistan_e_johar_block_9', 'br_1788026544351_51d763a8', 'Gulistan-e-Johar Block 9', 'gulistan_e_johar_block_9', 149.00, 124, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulshan_e_hadeed', 'br_1788026544351_51d763a8', 'Gulshan-e-Hadeed', 'gulshan_e_hadeed', 149.00, 135, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulshan_e_iqbal', 'br_1788026544351_51d763a8', 'Gulshan-e-Iqbal', 'gulshan_e_iqbal', 149.00, 136, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulshan_e_jamal', 'br_1788026544351_51d763a8', 'Gulshan-e-Jamal', 'gulshan_e_jamal', 149.00, 137, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulshan_e_maymar', 'br_1788026544351_51d763a8', 'Gulshan-e-Maymar', 'gulshan_e_maymar', 149.00, 138, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_gulzar_e_hijri', 'br_1788026544351_51d763a8', 'Gulzar-e-Hijri', 'gulzar_e_hijri', 149.00, 139, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_habib_bank_plaza', 'br_1788026544351_51d763a8', 'Habib Bank Plaza', 'habib_bank_plaza', 149.00, 140, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_hajiyani_goth', 'br_1788026544351_51d763a8', 'Hajiyani Goth', 'hajiyani_goth', 149.00, 141, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_harbour_front', 'br_1788026544351_51d763a8', 'Harbour Front', 'harbour_front', 149.00, 142, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_hill_park', 'br_1788026544351_51d763a8', 'Hill Park', 'hill_park', 149.00, 143, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_holy_family', 'br_1788026544351_51d763a8', 'Holy Family', 'holy_family', 149.00, 144, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_hussainabad', 'br_1788026544351_51d763a8', 'Hussainabad', 'hussainabad', 149.00, 145, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_hyderi', 'br_1788026544351_51d763a8', 'Hyderi', 'hyderi', 149.00, 146, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_i_i_chundrigar_road', 'br_1788026544351_51d763a8', 'I.I. Chundrigar Road', 'i_i_chundrigar_road', 149.00, 147, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_ibrahim_hyderi', 'br_1788026544351_51d763a8', 'Ibrahim Hyderi', 'ibrahim_hyderi', 149.00, 148, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_jamshed_quarters', 'br_1788026544351_51d763a8', 'Jamshed Quarters', 'jamshed_quarters', 149.00, 149, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_jauhar_chowrangi', 'br_1788026544351_51d763a8', 'Jauhar Chowrangi', 'jauhar_chowrangi', 149.00, 150, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_jinnah_terminal', 'br_1788026544351_51d763a8', 'Jinnah Terminal', 'jinnah_terminal', 149.00, 151, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_johar_complex', 'br_1788026544351_51d763a8', 'Johar Complex', 'johar_complex', 149.00, 152, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_kda_scheme_1', 'br_1788026544351_51d763a8', 'KDA Scheme 1', 'kda_scheme_1', 149.00, 153, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_kda_scheme_33', 'br_1788026544351_51d763a8', 'KDA Scheme 33', 'kda_scheme_33', 149.00, 154, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_keamari', 'br_1788026544351_51d763a8', 'Keamari', 'keamari', 149.00, 155, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_kehkashan', 'br_1788026544351_51d763a8', 'Kehkashan', 'kehkashan', 149.00, 156, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_khadda_market', 'br_1788026544351_51d763a8', 'Khadda Market', 'khadda_market', 149.00, 157, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_kharadar', 'br_1788026544351_51d763a8', 'Kharadar', 'kharadar', 149.00, 158, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_khudadad_colony', 'br_1788026544351_51d763a8', 'Khudadad Colony', 'khudadad_colony', 149.00, 159, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi', 'br_1788026544351_51d763a8', 'Korangi', 'korangi', 149.00, 160, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_crossing', 'br_1788026544351_51d763a8', 'Korangi Crossing', 'korangi_crossing', 149.00, 161, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_industrial_area', 'br_1788026544351_51d763a8', 'Korangi Industrial Area', 'korangi_industrial_area', 149.00, 162, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_31', 'br_1788026544351_51d763a8', 'Korangi Sector 31', 'korangi_sector_31', 149.00, 163, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_32', 'br_1788026544351_51d763a8', 'Korangi Sector 32', 'korangi_sector_32', 149.00, 164, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_33', 'br_1788026544351_51d763a8', 'Korangi Sector 33', 'korangi_sector_33', 149.00, 165, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_34', 'br_1788026544351_51d763a8', 'Korangi Sector 34', 'korangi_sector_34', 149.00, 166, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_35', 'br_1788026544351_51d763a8', 'Korangi Sector 35', 'korangi_sector_35', 149.00, 167, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_korangi_sector_36', 'br_1788026544351_51d763a8', 'Korangi Sector 36', 'korangi_sector_36', 149.00, 168, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_landhi', 'br_1788026544351_51d763a8', 'Landhi', 'landhi', 149.00, 169, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_liaquatabad', 'br_1788026544351_51d763a8', 'Liaquatabad', 'liaquatabad', 149.00, 170, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_lines_area', 'br_1788026544351_51d763a8', 'Lines Area', 'lines_area', 149.00, 171, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_lyari', 'br_1788026544351_51d763a8', 'Lyari', 'lyari', 149.00, 172, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_malir', 'br_1788026544351_51d763a8', 'Malir', 'malir', 149.00, 173, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_malir_cantonment', 'br_1788026544351_51d763a8', 'Malir Cantonment', 'malir_cantonment', 149.00, 174, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_malir_halt', 'br_1788026544351_51d763a8', 'Malir Halt', 'malir_halt', 149.00, 175, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_manzoor_colony', 'br_1788026544351_51d763a8', 'Manzoor Colony', 'manzoor_colony', 149.00, 176, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_maripur', 'br_1788026544351_51d763a8', 'Maripur', 'maripur', 149.00, 177, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_mehmoodabad', 'br_1788026544351_51d763a8', 'Mehmoodabad', 'mehmoodabad', 149.00, 178, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_metroville', 'br_1788026544351_51d763a8', 'Metroville', 'metroville', 149.00, 179, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_millat_nagar', 'br_1788026544351_51d763a8', 'Millat Nagar', 'millat_nagar', 149.00, 180, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_model_colony', 'br_1788026544351_51d763a8', 'Model Colony', 'model_colony', 149.00, 181, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_moinabad', 'br_1788026544351_51d763a8', 'Moinabad', 'moinabad', 149.00, 182, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_mujahid_colony', 'br_1788026544351_51d763a8', 'Mujahid Colony', 'mujahid_colony', 149.00, 183, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_muslim_town', 'br_1788026544351_51d763a8', 'Muslim Town', 'muslim_town', 149.00, 185, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_muslimabad', 'br_1788026544351_51d763a8', 'Muslimabad', 'muslimabad', 149.00, 184, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_national_stadium', 'br_1788026544351_51d763a8', 'National Stadium', 'national_stadium', 149.00, 186, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_1', 'br_1788026544351_51d763a8', 'Nazimabad 1', 'nazimabad_1', 149.00, 187, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_2', 'br_1788026544351_51d763a8', 'Nazimabad 2', 'nazimabad_2', 149.00, 188, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_3', 'br_1788026544351_51d763a8', 'Nazimabad 3', 'nazimabad_3', 149.00, 189, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_4', 'br_1788026544351_51d763a8', 'Nazimabad 4', 'nazimabad_4', 149.00, 190, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_5', 'br_1788026544351_51d763a8', 'Nazimabad 5', 'nazimabad_5', 149.00, 191, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_6', 'br_1788026544351_51d763a8', 'Nazimabad 6', 'nazimabad_6', 149.00, 192, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nazimabad_7', 'br_1788026544351_51d763a8', 'Nazimabad 7', 'nazimabad_7', 149.00, 193, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_new_karachi', 'br_1788026544351_51d763a8', 'New Karachi', 'new_karachi', 149.00, 194, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_new_town', 'br_1788026544351_51d763a8', 'New Town', 'new_town', 149.00, 195, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_nishat_commercial', 'br_1788026544351_51d763a8', 'Nishat Commercial', 'nishat_commercial', 149.00, 196, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_north_karachi', 'br_1788026544351_51d763a8', 'North Karachi', 'north_karachi', 149.00, 197, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_north_nazimabad_block_a', 'br_1788026544351_51d763a8', 'North Nazimabad Block A', 'north_nazimabad_block_a', 149.00, 198, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_north_nazimabad_block_b', 'br_1788026544351_51d763a8', 'North Nazimabad Block B', 'north_nazimabad_block_b', 149.00, 199, 1, '2026-08-29 23:18:03', '2026-08-29 23:18:03'),
+('da_1788026544351_51d763a8_north_nazimabad_block_c', 'br_1788026544351_51d763a8', 'North Nazimabad Block C', 'north_nazimabad_block_c', 149.00, 200, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_d', 'br_1788026544351_51d763a8', 'North Nazimabad Block D', 'north_nazimabad_block_d', 149.00, 201, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_e', 'br_1788026544351_51d763a8', 'North Nazimabad Block E', 'north_nazimabad_block_e', 149.00, 202, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_f', 'br_1788026544351_51d763a8', 'North Nazimabad Block F', 'north_nazimabad_block_f', 149.00, 203, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_g', 'br_1788026544351_51d763a8', 'North Nazimabad Block G', 'north_nazimabad_block_g', 149.00, 204, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_h', 'br_1788026544351_51d763a8', 'North Nazimabad Block H', 'north_nazimabad_block_h', 149.00, 205, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_i', 'br_1788026544351_51d763a8', 'North Nazimabad Block I', 'north_nazimabad_block_i', 149.00, 206, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_j', 'br_1788026544351_51d763a8', 'North Nazimabad Block J', 'north_nazimabad_block_j', 149.00, 207, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_k', 'br_1788026544351_51d763a8', 'North Nazimabad Block K', 'north_nazimabad_block_k', 149.00, 208, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_l', 'br_1788026544351_51d763a8', 'North Nazimabad Block L', 'north_nazimabad_block_l', 149.00, 209, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_m', 'br_1788026544351_51d763a8', 'North Nazimabad Block M', 'north_nazimabad_block_m', 149.00, 210, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_n', 'br_1788026544351_51d763a8', 'North Nazimabad Block N', 'north_nazimabad_block_n', 149.00, 211, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_o', 'br_1788026544351_51d763a8', 'North Nazimabad Block O', 'north_nazimabad_block_o', 149.00, 212, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_p', 'br_1788026544351_51d763a8', 'North Nazimabad Block P', 'north_nazimabad_block_p', 149.00, 213, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_q', 'br_1788026544351_51d763a8', 'North Nazimabad Block Q', 'north_nazimabad_block_q', 149.00, 214, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_r', 'br_1788026544351_51d763a8', 'North Nazimabad Block R', 'north_nazimabad_block_r', 149.00, 215, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_s', 'br_1788026544351_51d763a8', 'North Nazimabad Block S', 'north_nazimabad_block_s', 149.00, 216, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_north_nazimabad_block_t', 'br_1788026544351_51d763a8', 'North Nazimabad Block T', 'north_nazimabad_block_t', 149.00, 217, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_old_town', 'br_1788026544351_51d763a8', 'Old Town', 'old_town', 149.00, 218, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_orangi_town', 'br_1788026544351_51d763a8', 'Orangi Town', 'orangi_town', 149.00, 219, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_1', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 1', 'p_e_c_h_s_block_1', 149.00, 220, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_2', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 2', 'p_e_c_h_s_block_2', 149.00, 221, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_3', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 3', 'p_e_c_h_s_block_3', 149.00, 222, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_4', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 4', 'p_e_c_h_s_block_4', 149.00, 223, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_5', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 5', 'p_e_c_h_s_block_5', 149.00, 224, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_p_e_c_h_s_block_6', 'br_1788026544351_51d763a8', 'P.E.C.H.S Block 6', 'p_e_c_h_s_block_6', 149.00, 225, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_pakistan_chowk', 'br_1788026544351_51d763a8', 'Pakistan Chowk', 'pakistan_chowk', 149.00, 226, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_paposh_nagar', 'br_1788026544351_51d763a8', 'Paposh Nagar', 'paposh_nagar', 149.00, 227, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_paradise_point', 'br_1788026544351_51d763a8', 'Paradise Point', 'paradise_point', 149.00, 228, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_patel_para', 'br_1788026544351_51d763a8', 'Patel Para', 'patel_para', 149.00, 229, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_pechs', 'br_1788026544351_51d763a8', 'Pechs', 'pechs', 149.00, 230, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_pns_karsaz', 'br_1788026544351_51d763a8', 'PNS Karsaz', 'pns_karsaz', 149.00, 231, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_port_qasim', 'br_1788026544351_51d763a8', 'Port Qasim', 'port_qasim', 149.00, 232, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_qayyumabad', 'br_1788026544351_51d763a8', 'Qayyumabad', 'qayyumabad', 149.00, 233, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_railway_colony', 'br_1788026544351_51d763a8', 'Railway Colony', 'railway_colony', 149.00, 234, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_ranchore_line', 'br_1788026544351_51d763a8', 'Ranchore Line', 'ranchore_line', 149.00, 235, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_rashid_minhas_road', 'br_1788026544351_51d763a8', 'Rashid Minhas Road', 'rashid_minhas_road', 149.00, 236, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_rehmani_goth', 'br_1788026544351_51d763a8', 'Rehmani Goth', 'rehmani_goth', 149.00, 237, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_rizvia_society', 'br_1788026544351_51d763a8', 'Rizvia Society', 'rizvia_society', 149.00, 238, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_saddar', 'br_1788026544351_51d763a8', 'Saddar', 'saddar', 149.00, 239, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_safoora_goth', 'br_1788026544351_51d763a8', 'Safoora Goth', 'safoora_goth', 149.00, 240, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_sakhi_hassan', 'br_1788026544351_51d763a8', 'Sakhi Hassan', 'sakhi_hassan', 149.00, 241, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shah_faisal_colony', 'br_1788026544351_51d763a8', 'Shah Faisal Colony', 'shah_faisal_colony', 149.00, 242, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shah_latif_town', 'br_1788026544351_51d763a8', 'Shah Latif Town', 'shah_latif_town', 149.00, 243, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shahrah_e_faisal', 'br_1788026544351_51d763a8', 'Shahrah-e-Faisal', 'shahrah_e_faisal', 149.00, 244, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shahrah_e_quaideen', 'br_1788026544351_51d763a8', 'Shahrah-e-Quaideen', 'shahrah_e_quaideen', 149.00, 245, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_sharafi_goth', 'br_1788026544351_51d763a8', 'Sharafi Goth', 'sharafi_goth', 149.00, 246, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_sharfabad', 'br_1788026544351_51d763a8', 'Sharfabad', 'sharfabad', 149.00, 247, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shepherd_street', 'br_1788026544351_51d763a8', 'Shepherd Street', 'shepherd_street', 149.00, 248, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_shipowner_college', 'br_1788026544351_51d763a8', 'Shipowner College', 'shipowner_college', 149.00, 249, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_sindhi_muslim_society', 'br_1788026544351_51d763a8', 'Sindhi Muslim Society', 'sindhi_muslim_society', 149.00, 250, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_sohrab_goth', 'br_1788026544351_51d763a8', 'Sohrab Goth', 'sohrab_goth', 149.00, 251, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_soldier_bazaar', 'br_1788026544351_51d763a8', 'Soldier Bazaar', 'soldier_bazaar', 149.00, 252, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_star_gate', 'br_1788026544351_51d763a8', 'Star Gate', 'star_gate', 149.00, 253, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_steel_town', 'br_1788026544351_51d763a8', 'Steel Town', 'steel_town', 149.00, 254, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_super_highway', 'br_1788026544351_51d763a8', 'Super Highway', 'super_highway', 149.00, 255, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_surjani_town', 'br_1788026544351_51d763a8', 'Surjani Town', 'surjani_town', 149.00, 256, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_tariq_road', 'br_1788026544351_51d763a8', 'Tariq Road', 'tariq_road', 149.00, 257, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_tipu_sultan_road', 'br_1788026544351_51d763a8', 'Tipu Sultan Road', 'tipu_sultan_road', 149.00, 258, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_university_road', 'br_1788026544351_51d763a8', 'University Road', 'university_road', 149.00, 259, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_water_pump', 'br_1788026544351_51d763a8', 'Water Pump', 'water_pump', 149.00, 260, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_yaseenabad', 'br_1788026544351_51d763a8', 'Yaseenabad', 'yaseenabad', 149.00, 261, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_zamzama', 'br_1788026544351_51d763a8', 'Zamzama', 'zamzama', 149.00, 262, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
+('da_1788026544351_51d763a8_ziauddin_hospital', 'br_1788026544351_51d763a8', 'Ziauddin Hospital', 'ziauddin_hospital', 149.00, 263, 1, '2026-08-29 23:18:04', '2026-08-29 23:18:04'),
 ('da_abdullah_goth', 'br_xyz_karachi', 'Abdullah Goth', 'abdullah_goth', 149.00, 1, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_abul_hassan_isphahani_road', 'br_xyz_karachi', 'Abul Hassan Isphahani Road', 'abul_hassan_isphahani_road', 149.00, 2, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_airport', 'br_xyz_karachi', 'Airport', 'airport', 149.00, 3, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
@@ -554,8 +1075,7 @@ INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort
 ('da_baloch_colony', 'br_xyz_karachi', 'Baloch Colony', 'baloch_colony', 149.00, 24, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_banaras_colony', 'br_xyz_karachi', 'Banaras Colony', 'banaras_colony', 149.00, 25, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_bandhani_colony', 'br_xyz_karachi', 'Bandhani Colony', 'bandhani_colony', 149.00, 26, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
-('da_bath_island', 'br_xyz_karachi', 'Bath Island', 'bath_island', 149.00, 27, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03');
-INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort_order`, `enabled`, `created_at`, `updated_at`) VALUES
+('da_bath_island', 'br_xyz_karachi', 'Bath Island', 'bath_island', 149.00, 27, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_beacon_house', 'br_xyz_karachi', 'Beacon House', 'beacon_house', 149.00, 29, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_bhadur_colony', 'br_xyz_karachi', 'Bhadur Colony', 'bhadur_colony', 149.00, 30, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_bhittaiabad', 'br_xyz_karachi', 'Bhittaiabad', 'bhittaiabad', 149.00, 31, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
@@ -608,7 +1128,8 @@ INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort
 ('da_dha_phase_7', 'br_xyz_karachi', 'DHA Phase 7', 'dha_phase_7', 149.00, 73, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_dha_phase_8', 'br_xyz_karachi', 'DHA Phase 8', 'dha_phase_8', 149.00, 74, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_dhoraji_colony', 'br_xyz_karachi', 'Dhoraji Colony', 'dhoraji_colony', 149.00, 80, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
-('da_do_talwar', 'br_xyz_karachi', 'Do Talwar', 'do_talwar', 149.00, 81, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
+('da_do_talwar', 'br_xyz_karachi', 'Do Talwar', 'do_talwar', 149.00, 81, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03');
+INSERT INTO `delivery_areas` (`id`, `branch_id`, `name`, `slug`, `charge`, `sort_order`, `enabled`, `created_at`, `updated_at`) VALUES
 ('da_drigh_road', 'br_xyz_karachi', 'Drigh Road', 'drigh_road', 149.00, 82, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_eid_gah', 'br_xyz_karachi', 'Eid Gah', 'eid_gah', 149.00, 83, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
 ('da_f_b_area_block_1', 'br_xyz_karachi', 'F.B. Area Block 1', 'f_b_area_block_1', 149.00, 84, 1, '2026-08-26 17:22:40', '2026-08-26 23:15:03'),
@@ -900,7 +1421,7 @@ CREATE TABLE `offers` (
 --
 
 INSERT INTO `offers` (`id`, `title`, `description`, `type`, `discount_value`, `min_order`, `max_discount`, `buy_qty`, `get_qty`, `apply_scope`, `category_id`, `product_ids`, `buy_product_ids`, `get_product_ids`, `free_product_id`, `tax_code_id`, `tax_mode`, `conditions`, `active`, `start_date`, `end_date`, `branch_id`, `created_at`, `updated_at`) VALUES
-('offer_1787775616837_1a4a7335', 'test Offer', '', 'fixed', 100.00, 2000.00, NULL, 1, 1, 'category', 'cat_1787775352385_fbec603b', '[]', '[]', '[]', NULL, 'tax_1787775402786_4774c68c', 'inclusive', '', 1, '2026-08-05 00:00:00', '2026-08-28 00:00:00', 'br_xyz_karachi', '2026-08-27 01:20:16', '2026-08-27 01:20:16');
+('offer_1787775616837_1a4a7335', 'test Offer', '', 'fixed', 100.00, 2000.00, NULL, 1, 1, 'category', NULL, '[]', '[]', '[]', NULL, 'tax_1787775402786_4774c68c', 'inclusive', '', 1, '2026-08-05 00:00:00', '2026-08-28 00:00:00', 'br_xyz_karachi', '2026-08-27 01:20:16', '2026-08-27 01:20:16');
 
 -- --------------------------------------------------------
 
@@ -931,6 +1452,14 @@ CREATE TABLE `orders` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `customer_id`, `customer_name`, `customer_email`, `customer_phone`, `status`, `subtotal`, `offer_discount`, `coupon_discount`, `coupon_code`, `tax_amount`, `total`, `notes`, `rejection_reason`, `source`, `branch_id`, `delivery_type`, `shipping_fee`, `created_at`, `updated_at`) VALUES
+('UFU8GX', '16468347-97c1-40d0-92ac-3d188ec2e221', 'Mr. Abdul Moiz', 'digious.moiz@gmail.com', '23142314', 'pending', 500.00, 0.00, 0.00, NULL, 0.00, 649.00, 'Delivery type: delivery\nAddress: Airport\nDelivery area: Airport\nLandmark: asdf\nPayment: CASH\nAlternate phone: 234234231', NULL, 'website', 'br_1788026544351_51d763a8', 'delivery', 149.00, '2026-08-29 23:22:06', '2026-08-29 23:22:06'),
+('VAPY9M', '16468347-97c1-40d0-92ac-3d188ec2e221', 'Mr. Abdul Moiz', 'digious.moiz@gmail.com', '23142314', 'delivered', 250.00, 0.00, 0.00, NULL, 42.50, 441.50, 'Delivery type: delivery\nAddress: Akhtar Colony\nDelivery area: Akhtar Colony\nLandmark: asdf\nPayment: CASH\nAlternate phone: asdf', NULL, 'website', 'br_xyz_karachi', 'delivery', 149.00, '2026-08-29 23:22:51', '2026-08-29 23:23:18');
+
 -- --------------------------------------------------------
 
 --
@@ -946,6 +1475,14 @@ CREATE TABLE `order_items` (
   `price` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `name`, `qty`, `price`, `created_at`) VALUES
+('73a26beb-b473-427d-b50c-808ec1deea0f', 'UFU8GX', 'prod_1788027457154_591ea850', 'Cheese Burger', 1, 500.00, '2026-08-29 23:22:06'),
+('a6b70ced-96d5-407b-bc8d-b71da9a185cf', 'VAPY9M', 'prod_1788027215721_64a5ba00', 'Zinger Burger', 1, 250.00, '2026-08-29 23:22:51');
 
 -- --------------------------------------------------------
 
@@ -1080,7 +1617,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `category_id`, `brand_id`, `price`, `stock`, `status`, `image`, `sales`, `branch_id`, `tax_code_id`, `tax_mode`, `addon_mode`, `created_at`, `updated_at`, `description`, `discounted_price`, `tag`, `rating`, `is_featured`, `sort_order`) VALUES
-('prod_1787775448310_18ef2916', 'test-zinger', 'cat_1787775352385_fbec603b', NULL, 2000.00, -1, 'active', '', 0, 'br_xyz_karachi', 'tax_1787775402786_4774c68c', 'exclusive', 'all', '2026-08-27 01:17:28', '2026-08-27 01:17:28', 'test-zinger', NULL, '', 4.5, 1, 0);
+('prod_1788027215721_64a5ba00', 'Zinger Burger', 'cat_1788026843015_bc30e498', NULL, 250.00, -1, 'active', '/uploads/img_1788027186133_rhxswl.webp', 0, NULL, 'tax_1787775402786_4774c68c', 'exclusive', 'none', '2026-08-29 23:13:35', '2026-08-29 23:13:35', 'Short Desc', NULL, '', 4.5, 1, 0),
+('prod_1788027258950_8d44d1bb', 'Cheese Burger', 'cat_1788026843015_bc30e498', NULL, 300.00, -1, 'active', '/uploads/img_1788027244519_lx0gry.png', 0, 'br_1788026544351_51d763a8', 'tax_1787775402786_4774c68c', 'inclusive', 'all', '2026-08-29 23:14:18', '2026-08-29 23:14:18', 'description', NULL, '', 4.5, 1, 0),
+('prod_1788027457154_591ea850', 'Cheese Burger', 'cat_1788026843015_bc30e498', NULL, 500.00, -1, 'active', '/uploads/img_1788027442362_uc56kx.png', 0, 'br_1788026544351_51d763a8', NULL, 'inclusive', 'all', '2026-08-29 23:17:37', '2026-08-29 23:17:37', '', NULL, '', 4.5, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1320,7 +1859,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password_hash`, `role`, `role_id`, `status`, `last_login`, `created_at`, `updated_at`) VALUES
-('85ddc4f7-c0a5-4edb-b3af-c5d58684a10b', 'Admin User', 'admin@restaurant.com', '$2b$10$E1tqti5fB5xURF2B7QH40eq7leSJwootI0m8qakz92r6c8KQTG56u', 'admin', 'role_admin', 'active', '2026-08-27 01:10:18', '2026-07-03 23:15:19', '2026-08-27 01:10:18');
+('85ddc4f7-c0a5-4edb-b3af-c5d58684a10b', 'Admin User', 'admin@restaurant.com', '$2b$10$E1tqti5fB5xURF2B7QH40eq7leSJwootI0m8qakz92r6c8KQTG56u', 'admin', 'role_admin', 'active', '2026-08-29 21:40:36', '2026-07-03 23:15:19', '2026-08-29 21:40:36');
 
 -- --------------------------------------------------------
 

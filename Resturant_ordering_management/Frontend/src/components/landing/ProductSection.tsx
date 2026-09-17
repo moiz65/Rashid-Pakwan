@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useCartStore } from "../../store/CartStore";
 import { useMenuStore } from "@/store/MenuStore";
 import { resolveMediaUrl, type DisplayProduct, type MenuAddon, type MenuDrink, type ProductVariation } from "@/lib/api";
-import { formatAmount, formatPrice } from "@/lib/formatters";
+import { formatAmount } from "@/lib/formatters";
 
 type ProductSectionProps = {
   title?: string;
@@ -98,8 +98,10 @@ export function ProductSection({
 
   const getUnitPrice = () => {
     if (!selectedProduct) return 0;
-    const addonsTotal = availableAddons
-      .reduce((sum, addon) => sum + addon.price * (selectedAddons[addon.id] || 0), 0);
+    const addonsTotal = availableAddons.reduce(
+      (sum, addon) => sum + addon.price * (selectedAddons[addon.id] || 0),
+      0,
+    );
     const drinkPrice = selectedDrink ? Number(selectedDrink.price || 0) : 0;
     return getProductUnitPrice() + addonsTotal + drinkPrice;
   };
@@ -109,8 +111,10 @@ export function ProductSection({
     const basePrice = selectedVariation
       ? Number(selectedVariation.price || 0)
       : selectedProduct.price;
-    const addonsTotal = availableAddons
-      .reduce((sum, addon) => sum + addon.price * (selectedAddons[addon.id] || 0), 0);
+    const addonsTotal = availableAddons.reduce(
+      (sum, addon) => sum + addon.price * (selectedAddons[addon.id] || 0),
+      0,
+    );
     const drinkPrice = selectedDrink ? Number(selectedDrink.price || 0) : 0;
     return (basePrice + addonsTotal + drinkPrice) * quantity;
   };

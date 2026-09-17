@@ -1,5 +1,5 @@
 // Dev defaults to Vite proxy (/api → localhost:5000). Override with VITE_API_URL / VITE_API_ORIGIN.
-const PRODUCTION_ORIGIN = 'http://localhost:5000'
+const PRODUCTION_ORIGIN = 'https://red-yak-928925.hostingersite.com'
 const BACKEND_ORIGIN =
   import.meta.env.VITE_API_ORIGIN ||
   (import.meta.env.DEV ? '' : PRODUCTION_ORIGIN)
