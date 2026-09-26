@@ -14,7 +14,7 @@ import { useLandingScrollRestoration } from "@/hooks/useLandingScrollRestoration
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Studio 7teas — Online Ordering & Full Menu" },
+      { title: "RASHID PAKWAN — Online Ordering & Full Menu" },
       {
         name: "description",
         content: "Order food and tea online — hot deals, exclusive offers, categorized menu, and fast Karachi delivery.",
