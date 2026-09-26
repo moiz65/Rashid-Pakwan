@@ -1,0 +1,24 @@
+node_modules/
+.env
+dist/
+*.log
+.cursor/
+Resturant_Ordering_Management/
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+/rashid_pakwan.sql
+
+# Flutter
+flutter_admin/.dart_tool/
+flutter_admin/.flutter-plugins
+flutter_admin/.flutter-plugins-dependencies
+flutter_admin/.packages
+flutter_admin/build/
+flutter_admin/.pub-cache/
+flutter_admin/.pub/
+**/*.iml
+**/local.properties
+**/GeneratedPluginRegistrant.*
+flutter_admin/windows/flutter/ephemeral/
+flutter_admin/linux/flutter/ephemeral/
+flutter_admin/macos/Flutter/ephemeral/

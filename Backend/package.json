@@ -1,0 +1,26 @@
+{
+  "name": "restaurant-admin-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:migrate": "node src/database/migrate.js",
+    "db:seed": "node src/database/seed.js",
+    "db:seed:catalog": "node src/database/seed-catalog.js",
+    "db:seed:demo": "node src/database/seed-demo-scenarios.js",
+    "db:setup": "npm run db:migrate && npm run db:seed && node src/database/seed-orders-customers.js && node src/database/seed-tracking.js && npm run db:seed:catalog"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
+    "mysql2": "^3.14.1",
+    "openai": "^6.49.0"
+  }
+}

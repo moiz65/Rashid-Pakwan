@@ -1,0 +1,2 @@
+ALTER TABLE addons
+  ADD COLUMN image VARCHAR(500) NULL AFTER price;

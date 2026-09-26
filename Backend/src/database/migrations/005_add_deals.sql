@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS deals (
+  id              VARCHAR(36)  NOT NULL PRIMARY KEY,
+  title           VARCHAR(180) NOT NULL,
+  description     TEXT         NULL,
+  badge_text      VARCHAR(80)  NULL,
+  image           VARCHAR(255) NULL,
+  coupon_id       VARCHAR(36)  NULL,
+  discount_id     VARCHAR(36)  NULL,
+  offer_id        VARCHAR(36)  NULL,
+  start_at        DATETIME     NULL,
+  end_at          DATETIME     NULL,
+  show_countdown  TINYINT(1)   NOT NULL DEFAULT 1,
+  active          TINYINT(1)   NOT NULL DEFAULT 1,
+  sort_order      INT          NOT NULL DEFAULT 0,
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_deals_coupon FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE SET NULL,
+  CONSTRAINT fk_deals_discount FOREIGN KEY (discount_id) REFERENCES discounts(id) ON DELETE SET NULL,
+  CONSTRAINT fk_deals_offer FOREIGN KEY (offer_id) REFERENCES offers(id) ON DELETE SET NULL,
+  INDEX idx_deals_active_schedule (active, start_at, end_at),
+  INDEX idx_deals_sort (sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

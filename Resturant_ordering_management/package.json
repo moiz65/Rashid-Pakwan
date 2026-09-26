@@ -1,0 +1,14 @@
+{
+  "name": "restaurant-ordering-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Customer ordering website (Frontend + SSR Backend)",
+  "scripts": {
+    "dev": "npm run dev --prefix Frontend",
+    "build": "npm run build --prefix Frontend",
+    "preview": "npm run preview --prefix Frontend",
+    "lint": "npm run lint --prefix Frontend",
+    "install:all": "npm install --prefix Frontend",
+    "api:dev": "npm run dev --prefix ../Backend"
+  }
+}

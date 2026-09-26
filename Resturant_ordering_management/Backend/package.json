@@ -1,0 +1,12 @@
+{
+  "name": "ordering-website-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SSR server entry for the ordering website (built via Frontend Vite)",
+  "scripts": {
+    "dev": "npm run dev --prefix ../Frontend",
+    "build": "npm run build --prefix ../Frontend",
+    "start": "npm run preview --prefix ../Frontend"
+  }
+}
