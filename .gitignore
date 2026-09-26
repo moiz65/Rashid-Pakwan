@@ -1,6 +1,7 @@
 node_modules/
 .env
 dist/
+.vercel/
 *.log
 .cursor/
 Resturant_Ordering_Management/
