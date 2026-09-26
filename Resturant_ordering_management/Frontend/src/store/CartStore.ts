@@ -18,15 +18,6 @@ export type OfferBundleLine = {
   role: "buy" | "get";
 };
 
-/** Expanded product lines for BOGO/offer bundles (used at checkout pricing). */
-export type OfferBundleLine = {
-  productId: string;
-  name: string;
-  price: number;
-  qty: number;
-  role: "buy" | "get";
-};
-
 export type CartItem = {
   id: string;
   productId: string;
