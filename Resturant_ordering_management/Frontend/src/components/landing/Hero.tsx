@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, ShieldCheck, Flame } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import bannerSteak from "@/assets/Banner2.png";
 import bannerHandi from "@/assets/Banner4.png";
 import bannerSizzler from "@/assets/banner3.png";
@@ -89,8 +90,19 @@ export function Hero() {
 
   return (
     <section className="relative pt-28 sm:pt-32 md:pt-36 lg:pt-40 pb-4 lg:pb-6">
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative aspect-[16/9] sm:aspect-[2/1] w-full overflow-hidden rounded-2xl sm:rounded-3xl bg-card border border-border/60 shadow-xl">
+      <div className="relative w-full">
+        <div
+          className="
+            relative
+            h-[750px]
+            w-full
+            overflow-hidden
+            bg-card
+            border-y
+            border-border/60
+            shadow-xl
+          "
+        >
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.div
               key={currentSlide}
