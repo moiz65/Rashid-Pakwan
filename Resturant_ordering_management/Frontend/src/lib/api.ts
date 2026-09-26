@@ -1,6 +1,6 @@
 // Use the shared local backend through the Vite proxy by default.
 // Set VITE_API_URL for deployed environments.
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "https://lightsteelblue-skunk-406358.hostingersite.com/api";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
 export type OrderItemPayload = {
@@ -520,7 +520,7 @@ export type DisplayProduct = {
 };
 
 function apiOrigin() {
-  const base = import.meta.env.VITE_API_URL || "/api";
+  const base = import.meta.env.VITE_API_URL || "https://lightsteelblue-skunk-406358.hostingersite.com/api";
   if (base.startsWith("http")) {
     return base.replace(/\/api\/?$/, "");
   }
@@ -528,7 +528,7 @@ function apiOrigin() {
   if (configuredOrigin?.startsWith("http")) {
     return configuredOrigin.replace(/\/$/, "");
   }
-  return "http://localhost:5000";
+  return "https://lightsteelblue-skunk-406358.hostingersite.com";
 }
 
 export function resolveMediaUrl(path?: string | null) {

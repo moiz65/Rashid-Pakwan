@@ -17,7 +17,7 @@ const config = {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   corsOrigin: (() => {
-    const raw = process.env.CORS_ORIGIN || process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:5174,https://restaurant-admin-panel-gilt.vercel.app,https://restaurant-admin-panel-1klw.vercel.app'
+    const raw = process.env.CORS_ORIGIN || process.env.CORS_ORIGINS || 'http://localhost:5173, http://localhost:3000, http://localhost:8080, http://localhost:5174, https://restaurant-admin-panel-gilt.vercel.app, https://restaurant-admin-panel-1klw.vercel.app, https://rashid-pakwan-admin.vercel.app, https://rashid-pakwan.vercel.app'
     if (raw === '*') return true
     const list = raw.split(',')
       .map((s) => s.trim().replace(/\/$/, ''))
