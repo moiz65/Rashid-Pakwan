@@ -84,6 +84,22 @@ const emptyForm = {
   branchScope: 'all',
 }
 
+/** Bulk edit uses "__unchanged__" sentinel so users can leave fields alone. */
+const UNCHANGED = '__unchanged__'
+
+const emptyBulkForm = {
+  status: UNCHANGED,
+  featured: UNCHANGED,
+  categoryId: UNCHANGED,
+  brandId: UNCHANGED,
+  tag: UNCHANGED,
+  sortOrder: '',
+  stockMode: UNCHANGED,
+  stockValue: '',
+  priceMode: UNCHANGED,
+  priceValue: '',
+}
+
 function formatStock(stock) {
   const n = Number(stock)
   if (!Number.isFinite(n) || n < 0) {
@@ -136,6 +152,13 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false)
   const [filters, setFilters] = useState(defaultFilters)
   const { addons: formAddons } = useCatalogForBranchScope(form.branchScope)
+
+  // ---- Selection state (Select All support) ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(emptyBulkForm)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const categories = useMemo(
     () => filterByBranch(allCategories, selectedBranchId, { includeAllScoped: true }),
@@ -228,6 +251,169 @@ export default function ProductsPage() {
     })
     return list
   }, [products, filters, categories, brands])
+
+  // ---- Selection helpers (respect the current filtered view) ----
+  const visibleIds = useMemo(() => filteredProducts.map((p) => p.id), [filteredProducts])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteProductRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(deleteProduct(ids[idx]))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} product${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected products')
+  }
+
+  // ---- Bulk edit ----
+  const openBulkEdit = () => {
+    setBulkForm(emptyBulkForm)
+    setBulkEditOpen(true)
+  }
+
+  const closeBulkEdit = () => {
+    setBulkEditOpen(false)
+    setBulkForm(emptyBulkForm)
+  }
+
+  /**
+   * Build a full update payload from an existing product record,
+   * applying only the fields the user chose to change in the bulk editor.
+   */
+  const buildBulkPayload = (p) => {
+    const payload = {
+      name: p.name,
+      categoryId: p.categoryId || null,
+      brandId: p.brandId || null,
+      price: Number(p.price) || 0,
+      discountedPrice: p.discountedPrice != null ? Number(p.discountedPrice) : null,
+      stock: Number(p.stock ?? 0),
+      status: p.status,
+      image: p.image || '',
+      description: p.description || '',
+      tag: p.tag || '',
+      isFeatured: Boolean(p.isFeatured),
+      sortOrder: Number(p.sortOrder ?? 0),
+      addonMode: p.addonMode || 'all',
+      taxCodeId: p.taxCodeId || null,
+      taxMode: p.taxMode || 'inclusive',
+      branchId: p.branchId ?? null,
+      variations: Array.isArray(p.variations)
+        ? p.variations.map((v) => ({
+            id: v.id || undefined,
+            name: v.name,
+            price: Number(v.price) || 0,
+          }))
+        : [],
+    }
+    if (p.addonMode === 'selected') {
+      payload.addonIds = (p.addons || []).map((a) => a.id)
+    }
+
+    // Apply requested overrides
+    if (bulkForm.status !== UNCHANGED) payload.status = bulkForm.status
+    if (bulkForm.featured !== UNCHANGED) payload.isFeatured = bulkForm.featured === 'yes'
+    if (bulkForm.categoryId !== UNCHANGED) {
+      payload.categoryId = bulkForm.categoryId === NONE ? null : bulkForm.categoryId
+    }
+    if (bulkForm.brandId !== UNCHANGED) {
+      payload.brandId = bulkForm.brandId === NONE ? null : bulkForm.brandId
+    }
+    if (bulkForm.tag !== UNCHANGED) payload.tag = bulkForm.tag
+    if (bulkForm.sortOrder.trim() !== '') {
+      payload.sortOrder = parseInt(bulkForm.sortOrder, 10) || 0
+    }
+    if (bulkForm.stockMode !== UNCHANGED) {
+      if (bulkForm.stockMode === 'unlimited') {
+        payload.stock = UNLIMITED_STOCK
+      } else {
+        const v = parseInt(bulkForm.stockValue, 10)
+        payload.stock = Number.isNaN(v) ? 0 : Math.max(0, v)
+      }
+    }
+    if (bulkForm.priceMode !== UNCHANGED) {
+      if (bulkForm.priceMode === 'set') {
+        const v = parseFloat(bulkForm.priceValue)
+        payload.price = Number.isNaN(v) ? 0 : v
+      } else if (bulkForm.priceMode === 'increase') {
+        const v = parseFloat(bulkForm.priceValue)
+        const pct = Number.isNaN(v) ? 0 : v
+        payload.price = Math.round(payload.price * (1 + pct / 100) * 100) / 100
+      } else if (bulkForm.priceMode === 'decrease') {
+        const v = parseFloat(bulkForm.priceValue)
+        const pct = Number.isNaN(v) ? 0 : v
+        payload.price = Math.round(payload.price * (1 - pct / 100) * 100) / 100
+      }
+    }
+    return payload
+  }
+
+  const handleBulkEdit = async () => {
+    if (!token || selectedIds.length === 0) return
+    const selected = products.filter((p) => selectedIds.includes(p.id))
+    if (selected.length === 0) {
+      closeBulkEdit()
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      selected.map((p) => updateProductRequest(token, p.id, buildBulkPayload(p))),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(updateProduct(r.value))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    closeBulkEdit()
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Updated ${ok} product${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Updated ${ok}, failed ${failed}`)
+    else toast.error('Failed to update selected products')
+  }
 
   const openCreate = () => {
     setEditing(null)
@@ -370,6 +556,27 @@ export default function ProductsPage() {
   }
 
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.name}`}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       header: '',
       render: (r) => {
@@ -532,6 +739,53 @@ export default function ProductsPage() {
             {' '}of {products.length} products
           </p>
         </div>
+
+        {/* Select-all toggle in the filter bar */}
+        {canEdit && visibleIds.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all visible products"
+              />
+              <span>Select all</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {selectedVisibleCount} of {visibleIds.length} selected
+              </span>
+            </label>
+            {selectedIds.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {selectedIds.length} selected
+                </span>
+                <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={bulkBusy}
+                  onClick={openBulkEdit}
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Edit selected
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={bulkBusy}
+                  onClick={() => setBulkDeleteOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete selected
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <DataTable
@@ -869,12 +1123,209 @@ export default function ProductsPage() {
         </FormSection>
       </FormDialog>
 
+      {/* ---- Bulk Edit dialog ---- */}
+      <FormDialog
+        open={bulkEditOpen}
+        onOpenChange={(next) => !next && closeBulkEdit()}
+        title={`Edit ${selectedIds.length} product${selectedIds.length === 1 ? '' : 's'}`}
+        description="Only fields you change here will be applied. Leave a field as 'Keep current' to leave it untouched."
+        size="lg"
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={closeBulkEdit} disabled={bulkBusy}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleBulkEdit} disabled={bulkBusy || !canEdit}>
+              {bulkBusy ? 'Saving…' : 'Apply changes'}
+            </Button>
+          </>
+        }
+      >
+        <FormSection title="Status & visibility">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Status</Label>
+              <Select
+                value={bulkForm.status}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, status: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Featured</Label>
+              <Select
+                value={bulkForm.featured}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, featured: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="yes">Featured</SelectItem>
+                  <SelectItem value="no">Not featured</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="Category & brand">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Category</Label>
+              <Select
+                value={bulkForm.categoryId}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, categoryId: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Brand</Label>
+              <Select
+                value={bulkForm.brandId}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, brandId: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="Tag & sort order">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Tag</Label>
+              <Input
+                value={bulkForm.tag === UNCHANGED ? '' : bulkForm.tag}
+                placeholder="Keep current"
+                onChange={(e) =>
+                  setBulkForm({ ...bulkForm, tag: e.target.value === '' ? UNCHANGED : e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Sort order</Label>
+              <Input
+                type="number"
+                value={bulkForm.sortOrder}
+                placeholder="Keep current"
+                onChange={(e) => setBulkForm({ ...bulkForm, sortOrder: e.target.value })}
+              />
+            </div>
+          </div>
+        </FormSection>
+
+        <FormSection title="Stock">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Stock mode</Label>
+              <Select
+                value={bulkForm.stockMode}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, stockMode: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="unlimited">Unlimited (∞)</SelectItem>
+                  <SelectItem value="set">Set quantity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {bulkForm.stockMode === 'set' ? (
+              <div className="grid gap-2">
+                <Label>Quantity</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={bulkForm.stockValue}
+                  onChange={(e) => setBulkForm({ ...bulkForm, stockValue: e.target.value })}
+                  placeholder="e.g. 50"
+                />
+              </div>
+            ) : null}
+          </div>
+        </FormSection>
+
+        <FormSection title="Price">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Price action</Label>
+              <Select
+                value={bulkForm.priceMode}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, priceMode: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="set">Set to fixed price</SelectItem>
+                  <SelectItem value="increase">Increase by %</SelectItem>
+                  <SelectItem value="decrease">Decrease by %</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {bulkForm.priceMode !== UNCHANGED ? (
+              <div className="grid gap-2">
+                <Label>
+                  {bulkForm.priceMode === 'set'
+                    ? 'New price'
+                    : bulkForm.priceMode === 'increase'
+                      ? 'Increase %'
+                      : 'Decrease %'}
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={bulkForm.priceValue}
+                  onChange={(e) => setBulkForm({ ...bulkForm, priceValue: e.target.value })}
+                  placeholder={bulkForm.priceMode === 'set' ? '0' : '10'}
+                />
+              </div>
+            ) : null}
+          </div>
+          {bulkForm.priceMode === 'set' ? (
+            <p className="text-xs text-muted-foreground">
+              Note: the existing sale price (if any) will be preserved. To reset the sale price, edit products individually.
+            </p>
+          ) : null}
+        </FormSection>
+      </FormDialog>
+
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         title="Delete Product"
         description="Are you sure you want to delete this product?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} product${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected products. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

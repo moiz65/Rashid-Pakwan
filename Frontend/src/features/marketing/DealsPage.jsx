@@ -73,6 +73,15 @@ const emptyItem = () => ({
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 
+/** Bulk edit uses "__unchanged__" sentinel so users can leave fields alone. */
+const UNCHANGED = '__unchanged__'
+
+const emptyBulkForm = {
+  active: UNCHANGED,
+  showCountdown: UNCHANGED,
+  sortOrder: '',
+}
+
 function createEmptyForm() {
   return {
     title: '',
@@ -189,6 +198,13 @@ export default function DealsPage() {
   const { products, drinks, addons } = useCatalogForBranchScope(form.branchScope)
   const branchNames = useAppSelector(selectBranchNameById)
   const showBranchInPicker = !form.branchScope || form.branchScope === BRANCH_SCOPE_ALL
+
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(emptyBulkForm)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const resetAndClose = () => {
     setOpen(false)
@@ -491,6 +507,7 @@ export default function DealsPage() {
     try {
       await deleteDealRequest(token, deleteId)
       dispatch(deleteDeal(deleteId))
+      setSelectedIds((prev) => prev.filter((x) => x !== deleteId))
       toast.success('Deal deleted')
       setDeleteId(null)
     } catch (err) {
@@ -498,7 +515,164 @@ export default function DealsPage() {
     }
   }
 
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => deals.map((d) => d.id), [deals])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteDealRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(deleteDeal(ids[idx]))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} deal${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected deals')
+  }
+
+  // ---- Bulk edit ----
+  const openBulkEdit = () => {
+    setBulkForm(emptyBulkForm)
+    setBulkEditOpen(true)
+  }
+
+  const closeBulkEdit = () => {
+    setBulkEditOpen(false)
+    setBulkForm(emptyBulkForm)
+  }
+
+  const buildBulkPayload = (d) => {
+    const items = (d.items || []).map((item) => ({
+      itemType: item.itemType || 'product',
+      productId: item.productId || null,
+      drinkId: item.drinkId || null,
+      addonId: item.addonId || null,
+      name: item.name,
+      qty: Math.max(1, Number(item.qty) || 1),
+      unitPrice: Number(item.unitPrice) || 0,
+      customerChoice: Boolean(item.customerChoice),
+      choiceIds: Array.isArray(item.choiceIds) ? item.choiceIds : [],
+    }))
+
+    const payload = {
+      title: d.title,
+      description: d.description || '',
+      badgeText: d.badgeText || '',
+      image: d.image || '',
+      price: Number(d.price) || 0,
+      originalPrice: Number(d.originalPrice) || 0,
+      taxCodeId: d.taxCodeId || null,
+      taxMode: d.taxMode || 'inclusive',
+      startAt: d.startAt || null,
+      endAt: d.endAt || null,
+      daysOfWeek: Array.isArray(d.daysOfWeek) && d.daysOfWeek.length ? d.daysOfWeek : ALL_DAYS,
+      dailyStartTime: d.dailyStartTime || null,
+      dailyEndTime: d.dailyEndTime || null,
+      showCountdown: d.showCountdown !== false,
+      active: d.active !== false,
+      sortOrder: Number(d.sortOrder ?? 0),
+      addonMode: d.addonMode || 'all',
+      items,
+      branchId: branchScopeToApi(branchScopeFromRecord(d.branchId)),
+    }
+    if (d.addonMode === 'selected') payload.addonIds = d.addonIds || []
+
+    // Apply overrides
+    if (bulkForm.active !== UNCHANGED) payload.active = bulkForm.active === 'yes'
+    if (bulkForm.showCountdown !== UNCHANGED) payload.showCountdown = bulkForm.showCountdown === 'yes'
+    if (bulkForm.sortOrder.trim() !== '') {
+      payload.sortOrder = parseInt(bulkForm.sortOrder, 10) || 0
+    }
+    return payload
+  }
+
+  const handleBulkEdit = async () => {
+    if (!token || selectedIds.length === 0) return
+    const selected = deals.filter((d) => selectedIds.includes(d.id))
+    if (selected.length === 0) {
+      closeBulkEdit()
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      selected.map((d) => updateDealRequest(token, d.id, buildBulkPayload(d))),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(updateDeal(r.value))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    closeBulkEdit()
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Updated ${ok} deal${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Updated ${ok}, failed ${failed}`)
+    else toast.error('Failed to update selected deals')
+  }
+
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.title}`}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       header: 'Deal',
       render: (r) => (
@@ -616,6 +790,60 @@ export default function DealsPage() {
           ) : undefined
         }
       />
+
+      {/* Select-all / bulk-actions bar */}
+      {canEdit && deals.length > 0 ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <Checkbox
+              checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+              onCheckedChange={(v) => toggleSelectAll(v === true)}
+              aria-label="Select all deals"
+            />
+            <span>Select all</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {selectedVisibleCount} of {visibleIds.length} selected
+            </span>
+          </label>
+          {selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.length} selected
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={clearSelection}
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={openBulkEdit}
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit selected
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete selected
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <DataTable data={deals} columns={columns} searchKey="title" />
 
       <FormDialog
@@ -978,12 +1206,80 @@ export default function DealsPage() {
         </FormSection>
       </FormDialog>
 
+      {/* ---- Bulk Edit dialog ---- */}
+      <FormDialog
+        open={bulkEditOpen}
+        onOpenChange={(next) => !next && closeBulkEdit()}
+        title={`Edit ${selectedIds.length} deal${selectedIds.length === 1 ? '' : 's'}`}
+        description="Only fields you change here will be applied. Leave a field as 'Keep current' to leave it untouched."
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={closeBulkEdit} disabled={bulkBusy}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleBulkEdit} disabled={bulkBusy || !canEdit}>
+              {bulkBusy ? 'Saving…' : 'Apply changes'}
+            </Button>
+          </>
+        }
+      >
+        <FormSection title="Visibility & display">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Active</Label>
+              <Select
+                value={bulkForm.active}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, active: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="yes">Active</SelectItem>
+                  <SelectItem value="no">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Show countdown</Label>
+              <Select
+                value={bulkForm.showCountdown}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, showCountdown: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="yes">Show countdown</SelectItem>
+                  <SelectItem value="no">Hide countdown</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label>Sort order</Label>
+            <Input
+              type="number"
+              value={bulkForm.sortOrder}
+              placeholder="Keep current"
+              onChange={(e) => setBulkForm({ ...bulkForm, sortOrder: e.target.value })}
+            />
+          </div>
+        </FormSection>
+      </FormDialog>
+
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         title="Delete Deal"
         description="Delete this deal and its products?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} deal${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected deals. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

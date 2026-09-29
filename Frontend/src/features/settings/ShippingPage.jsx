@@ -29,7 +29,8 @@ import {
 import { usePermission } from '@/hooks/usePermission'
 
 const emptyForm = { name: '', description: '', price: '', estimatedTime: '', enabled: true }
-const emptyAreaForm = { name: '', charge: '149', enabled: true }
+// New delivery areas default to OFF — user must explicitly enable them.
+const emptyAreaForm = { name: '', charge: '149', enabled: false }
 
 export default function ShippingPage() {
   const dispatch = useAppDispatch()
@@ -53,6 +54,7 @@ export default function ShippingPage() {
   const [areasLoading, setAreasLoading] = useState(false)
   const [areaDrafts, setAreaDrafts] = useState({})
   const [savingAreaId, setSavingAreaId] = useState(null)
+  const [bulkUpdating, setBulkUpdating] = useState(false)
   const [areaDialogOpen, setAreaDialogOpen] = useState(false)
   const [areaForm, setAreaForm] = useState(emptyAreaForm)
   const [areaSaving, setAreaSaving] = useState(false)
@@ -105,6 +107,13 @@ export default function ShippingPage() {
       return String(a.name || '').toLowerCase().includes(q)
     })
   }, [areas, areaSearch, areaLetter])
+
+  const enabledCount = useMemo(
+    () => areas.filter((a) => a.enabled !== false).length,
+    [areas],
+  )
+  const allEnabled = areas.length > 0 && enabledCount === areas.length
+  const noneEnabled = areas.length > 0 && enabledCount === 0
 
   const resetAndClose = () => {
     setOpen(false)
@@ -230,6 +239,36 @@ export default function ShippingPage() {
     }
   }
 
+  /**
+   * Master toggle: enables or disables EVERY area for the selected branch.
+   * - Turning the switch ON enables every disabled area.
+   * - Turning the switch OFF disables every enabled area.
+   * Individual toggles continue to work; the master reflects their aggregate state.
+   */
+  const handleToggleAllAreas = async (next) => {
+    if (!token || bulkUpdating) return
+    const toUpdate = areas.filter((a) => (a.enabled !== false) !== next)
+    if (toUpdate.length === 0) return
+    setBulkUpdating(true)
+    try {
+      const updated = await Promise.all(
+        toUpdate.map((a) => updateDeliveryAreaRequest(token, a.id, { enabled: next })),
+      )
+      setAreas((prev) =>
+        prev.map((a) => updated.find((u) => u.id === a.id) || a),
+      )
+      toast.success(
+        next
+          ? `All ${toUpdate.length} areas enabled on website`
+          : `All ${toUpdate.length} areas hidden from website`,
+      )
+    } catch (err) {
+      toast.error(err.message || 'Failed to update areas')
+    } finally {
+      setBulkUpdating(false)
+    }
+  }
+
   const handleCreateArea = async () => {
     if (!token) return
     if (isAllBranches || !selectedBranchId) {
@@ -325,95 +364,123 @@ export default function ShippingPage() {
             </p>
           ) : (
             <>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search area…"
-              value={areaSearch}
-              onChange={(e) => setAreaSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {letters.map((letter) => (
-              <Button
-                key={letter}
-                type="button"
-                size="sm"
-                variant={areaLetter === letter ? 'default' : 'outline'}
-                className="h-8 min-w-8 px-2"
-                onClick={() => setAreaLetter(letter)}
-              >
-                {letter}
-              </Button>
-            ))}
-          </div>
-          <div className="rounded-lg border max-h-[28rem] overflow-y-auto divide-y">
-            {areasLoading ? (
-              <p className="p-4 text-sm text-muted-foreground">Loading areas…</p>
-            ) : filteredAreas.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">No areas match your search.</p>
-            ) : (
-              filteredAreas.map((area) => {
-                const dirty = String(areaDrafts[area.id] ?? '') !== String(area.charge ?? 0)
-                const charge = parseFloat(areaDrafts[area.id]) || 0
-                return (
-                  <div
-                    key={area.id}
-                    className="flex flex-wrap items-center gap-3 px-3 py-2.5 hover:bg-muted/40"
+              {/* Master select-all toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="select-all-areas"
+                    className="text-sm font-medium cursor-pointer"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{area.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Delivery {formatCurrency(charge)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1"
-                        className="w-24 h-8"
-                        value={areaDrafts[area.id] ?? ''}
-                        onChange={(e) =>
-                          setAreaDrafts((prev) => ({ ...prev, [area.id]: e.target.value }))
-                        }
-                        disabled={!canEdit}
-                      />
-                      {canEdit ? (
-                        <>
-                          <Button
-                            type="button"
-                            size="sm"
-                            disabled={!dirty || savingAreaId === area.id}
-                            onClick={() => handleSaveAreaCharge(area)}
-                          >
-                            {savingAreaId === area.id ? '…' : 'Save'}
-                          </Button>
-                          <Switch
-                            checked={area.enabled !== false}
-                            onCheckedChange={() => handleToggleArea(area)}
+                    Select all areas
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {enabledCount} of {areas.length} enabled
+                    {noneEnabled && areas.length > 0 ? ' · all hidden' : ''}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {bulkUpdating ? (
+                    <span className="text-xs text-muted-foreground">Updating…</span>
+                  ) : null}
+                  <Switch
+                    id="select-all-areas"
+                    checked={allEnabled}
+                    disabled={bulkUpdating || areas.length === 0 || !canEdit}
+                    onCheckedChange={handleToggleAllAreas}
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder="Search area…"
+                  value={areaSearch}
+                  onChange={(e) => setAreaSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {letters.map((letter) => (
+                  <Button
+                    key={letter}
+                    type="button"
+                    size="sm"
+                    variant={areaLetter === letter ? 'default' : 'outline'}
+                    className="h-8 min-w-8 px-2"
+                    onClick={() => setAreaLetter(letter)}
+                  >
+                    {letter}
+                  </Button>
+                ))}
+              </div>
+              <div className="rounded-lg border max-h-[28rem] overflow-y-auto divide-y">
+                {areasLoading ? (
+                  <p className="p-4 text-sm text-muted-foreground">Loading areas…</p>
+                ) : filteredAreas.length === 0 ? (
+                  <p className="p-4 text-sm text-muted-foreground">No areas match your search.</p>
+                ) : (
+                  filteredAreas.map((area) => {
+                    const dirty = String(areaDrafts[area.id] ?? '') !== String(area.charge ?? 0)
+                    const charge = parseFloat(areaDrafts[area.id]) || 0
+                    return (
+                      <div
+                        key={area.id}
+                        className="flex flex-wrap items-center gap-3 px-3 py-2.5 hover:bg-muted/40"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{area.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Delivery {formatCurrency(charge)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1"
+                            className="w-24 h-8"
+                            value={areaDrafts[area.id] ?? ''}
+                            onChange={(e) =>
+                              setAreaDrafts((prev) => ({ ...prev, [area.id]: e.target.value }))
+                            }
+                            disabled={!canEdit}
                           />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setDeleteAreaId(area.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {areas.length} areas total · showing {filteredAreas.length}
-          </p>
+                          {canEdit ? (
+                            <>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={!dirty || savingAreaId === area.id}
+                                onClick={() => handleSaveAreaCharge(area)}
+                              >
+                                {savingAreaId === area.id ? '…' : 'Save'}
+                              </Button>
+                              <Switch
+                                checked={area.enabled !== false}
+                                disabled={bulkUpdating}
+                                onCheckedChange={() => handleToggleArea(area)}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setDeleteAreaId(area.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {areas.length} areas total · showing {filteredAreas.length}
+              </p>
             </>
           )}
         </CardContent>

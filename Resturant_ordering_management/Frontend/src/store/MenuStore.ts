@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import {
   fetchPublicMenu,
-  type MenuAddon,
-  type MenuCategory,
-  type MenuDrink,
   type MenuProduct,
+  type MenuCategory,
+  type MenuAddon,
+  
+  type MenuDrink,
+  // type MenuProduct,
 } from "@/lib/api";
 import { getStoredBranchId } from "@/lib/branchSelection";
 
@@ -114,3 +116,4 @@ export const useMenuStore = create<MenuStore>((set, get) => ({
     }),
   setOnlySale: (value) => set({ onlySale: value }),
 }));
+

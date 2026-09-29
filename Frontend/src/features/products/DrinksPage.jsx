@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Pencil, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -18,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { FormDialog } from '@/components/shared/FormDialog'
+import { FormDialog, FormSection } from '@/components/shared/FormDialog'
 import { BranchBadge } from '@/components/shared/BranchBadge'
 import {
   BranchScopeField,
@@ -52,6 +53,17 @@ const emptyForm = {
   branchScope: 'all',
 }
 
+/** Bulk edit uses "__unchanged__" sentinel so users can leave fields alone. */
+const UNCHANGED = '__unchanged__'
+
+const emptyBulkForm = {
+  status: UNCHANGED,
+  stockMode: UNCHANGED,
+  stockValue: '',
+  priceMode: UNCHANGED,
+  priceValue: '',
+}
+
 function formatStock(stock) {
   const n = Number(stock)
   if (!Number.isFinite(n) || n < 0) {
@@ -74,6 +86,13 @@ export default function DrinksPage() {
   const [deleteId, setDeleteId] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(emptyBulkForm)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const resetAndClose = () => {
     setOpen(false)
@@ -155,7 +174,156 @@ export default function DrinksPage() {
     }
   }
 
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => drinks.map((d) => d.id), [drinks])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteDrinkRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(deleteDrink(ids[idx]))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} drink${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected drinks')
+  }
+
+  // ---- Bulk edit ----
+  const openBulkEdit = () => {
+    setBulkForm(emptyBulkForm)
+    setBulkEditOpen(true)
+  }
+
+  const closeBulkEdit = () => {
+    setBulkEditOpen(false)
+    setBulkForm(emptyBulkForm)
+  }
+
+  const buildBulkPayload = (d) => {
+    const payload = {
+      name: d.name,
+      description: d.description || '',
+      price: Number(d.price) || 0,
+      stock: Number(d.stock ?? 0),
+      image: d.image || '',
+      status: d.status || 'active',
+      sortOrder: Number(d.sortOrder ?? 0),
+      branchId: branchScopeToApi(branchScopeFromRecord(d.branchId)),
+    }
+    if (bulkForm.status !== UNCHANGED) payload.status = bulkForm.status
+    if (bulkForm.stockMode !== UNCHANGED) {
+      if (bulkForm.stockMode === 'unlimited') {
+        payload.stock = UNLIMITED_STOCK
+      } else {
+        const v = parseInt(bulkForm.stockValue, 10)
+        payload.stock = Number.isNaN(v) ? 0 : Math.max(0, v)
+      }
+    }
+    if (bulkForm.priceMode !== UNCHANGED) {
+      if (bulkForm.priceMode === 'set') {
+        const v = parseFloat(bulkForm.priceValue)
+        payload.price = Number.isNaN(v) ? 0 : v
+      } else if (bulkForm.priceMode === 'increase') {
+        const v = parseFloat(bulkForm.priceValue)
+        const pct = Number.isNaN(v) ? 0 : v
+        payload.price = Math.round(payload.price * (1 + pct / 100) * 100) / 100
+      } else if (bulkForm.priceMode === 'decrease') {
+        const v = parseFloat(bulkForm.priceValue)
+        const pct = Number.isNaN(v) ? 0 : v
+        payload.price = Math.round(payload.price * (1 - pct / 100) * 100) / 100
+      }
+    }
+    return payload
+  }
+
+  const handleBulkEdit = async () => {
+    if (!token || selectedIds.length === 0) return
+    const selected = drinks.filter((d) => selectedIds.includes(d.id))
+    if (selected.length === 0) {
+      closeBulkEdit()
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      selected.map((d) => updateDrinkRequest(token, d.id, buildBulkPayload(d))),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(updateDrink(r.value))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    closeBulkEdit()
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Updated ${ok} drink${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Updated ${ok}, failed ${failed}`)
+    else toast.error('Failed to update selected drinks')
+  }
+
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.name}`}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       header: 'Drink',
       render: (r) => (
@@ -211,6 +379,54 @@ export default function DrinksPage() {
         actionLabel={canEdit ? 'Add Drink' : undefined}
         onAction={canEdit ? openCreate : undefined}
       />
+
+      {/* Select-all / bulk-actions bar */}
+      {canEdit && drinks.length > 0 ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <Checkbox
+              checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+              onCheckedChange={(v) => toggleSelectAll(v === true)}
+              aria-label="Select all drinks"
+            />
+            <span>Select all</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {selectedVisibleCount} of {visibleIds.length} selected
+            </span>
+          </label>
+          {selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.length} selected
+              </span>
+              <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>
+                Clear
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={openBulkEdit}
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit selected
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete selected
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <DataTable data={drinks} columns={columns} searchKey="name" />
 
       <FormDialog
@@ -301,12 +517,126 @@ export default function DrinksPage() {
         />
       </FormDialog>
 
+      {/* ---- Bulk Edit dialog ---- */}
+      <FormDialog
+        open={bulkEditOpen}
+        onOpenChange={(next) => !next && closeBulkEdit()}
+        title={`Edit ${selectedIds.length} drink${selectedIds.length === 1 ? '' : 's'}`}
+        description="Only fields you change here will be applied. Leave a field as 'Keep current' to leave it untouched."
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={closeBulkEdit} disabled={bulkBusy}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleBulkEdit} disabled={bulkBusy || !canEdit}>
+              {bulkBusy ? 'Saving…' : 'Apply changes'}
+            </Button>
+          </>
+        }
+      >
+        <FormSection title="Status">
+          <div className="grid gap-2">
+            <Label>Status</Label>
+            <Select
+              value={bulkForm.status}
+              onValueChange={(v) => setBulkForm({ ...bulkForm, status: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="out_of_stock">Out of stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </FormSection>
+
+        <FormSection title="Stock">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Stock mode</Label>
+              <Select
+                value={bulkForm.stockMode}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, stockMode: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="unlimited">Unlimited (∞)</SelectItem>
+                  <SelectItem value="set">Set quantity</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {bulkForm.stockMode === 'set' ? (
+              <div className="grid gap-2">
+                <Label>Quantity</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={bulkForm.stockValue}
+                  onChange={(e) => setBulkForm({ ...bulkForm, stockValue: e.target.value })}
+                  placeholder="e.g. 50"
+                />
+              </div>
+            ) : null}
+          </div>
+        </FormSection>
+
+        <FormSection title="Price">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Price action</Label>
+              <Select
+                value={bulkForm.priceMode}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, priceMode: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="set">Set to fixed price</SelectItem>
+                  <SelectItem value="increase">Increase by %</SelectItem>
+                  <SelectItem value="decrease">Decrease by %</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {bulkForm.priceMode !== UNCHANGED ? (
+              <div className="grid gap-2">
+                <Label>
+                  {bulkForm.priceMode === 'set'
+                    ? 'New price'
+                    : bulkForm.priceMode === 'increase'
+                      ? 'Increase %'
+                      : 'Decrease %'}
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={bulkForm.priceValue}
+                  onChange={(e) => setBulkForm({ ...bulkForm, priceValue: e.target.value })}
+                  placeholder={bulkForm.priceMode === 'set' ? '0' : '10'}
+                />
+              </div>
+            ) : null}
+          </div>
+        </FormSection>
+      </FormDialog>
+
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={() => setDeleteId(null)}
         title="Delete Drink"
         description="Delete this drink?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} drink${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected drinks. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

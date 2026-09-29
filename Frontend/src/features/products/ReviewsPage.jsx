@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState, Fragment } from 'react'
+import { useCallback, useEffect, useMemo, useState, Fragment } from 'react'
 import { toast } from 'sonner'
 import { Check, ChevronDown, ChevronRight, Loader2, X } from 'lucide-react'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { StatusBadge } from '@/components/shared/StatusBadge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -53,12 +55,18 @@ export default function ReviewsPage() {
   const [expanded, setExpanded] = useState({})
   const [busyId, setBusyId] = useState(null)
 
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+
   const load = useCallback(async () => {
     if (!token) return
     setLoading(true)
     try {
       const data = await fetchOrderReviews(token, apiBranchParams(selectedBranchId))
       setReviews(data || [])
+      setSelectedIds([])
     } catch (err) {
       toast.error(err.message || 'Failed to load reviews')
     } finally {
@@ -88,6 +96,7 @@ export default function ReviewsPage() {
     try {
       await deleteOrderReviewRequest(token, id)
       setReviews((prev) => prev.filter((r) => r.id !== id))
+      setSelectedIds((prev) => prev.filter((x) => x !== id))
       toast.success('Review deleted')
     } catch (err) {
       toast.error(err.message || 'Failed to delete review')
@@ -96,9 +105,107 @@ export default function ReviewsPage() {
     }
   }
 
-  const filtered = reviews.filter((r) =>
-    String(r.customerName ?? '').toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(
+    () =>
+      reviews.filter((r) =>
+        String(r.customerName ?? '').toLowerCase().includes(search.toLowerCase()),
+      ),
+    [reviews, search],
   )
+
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => filtered.map((r) => r.id), [filtered])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk actions ----
+  const selectedReviews = useMemo(
+    () => reviews.filter((r) => selectedIds.includes(r.id)),
+    [reviews, selectedIds],
+  )
+
+  const handleBulkStatus = async (status) => {
+    if (!token || selectedIds.length === 0) return
+    // Only update reviews that aren't already in the target status
+    const targets = selectedReviews.filter((r) => r.status !== status)
+    if (targets.length === 0) {
+      toast.info(`All selected reviews are already ${status}`)
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      targets.map((r) => updateOrderReviewRequest(token, r.id, { status })),
+    )
+    let ok = 0
+    let failed = 0
+    const updates = new Map()
+    results.forEach((res, idx) => {
+      if (res.status === 'fulfilled') {
+        ok += 1
+        updates.set(targets[idx].id, res.value)
+      } else {
+        failed += 1
+      }
+    })
+    if (updates.size) {
+      setReviews((prev) => prev.map((r) => (updates.has(r.id) ? updates.get(r.id) : r)))
+    }
+    setBulkBusy(false)
+    clearSelection()
+    const label = status === 'approved' ? 'approved' : 'rejected'
+    if (ok > 0 && failed === 0) toast.success(`${ok} review${ok === 1 ? '' : 's'} ${label}`)
+    else if (ok > 0 && failed > 0) toast.error(`${ok} ${label}, failed ${failed}`)
+    else toast.error(`Failed to ${label === 'approved' ? 'approve' : 'reject'} selected reviews`)
+  }
+
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteOrderReviewRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    const deleted = new Set()
+    results.forEach((res, idx) => {
+      if (res.status === 'fulfilled') {
+        ok += 1
+        deleted.add(ids[idx])
+      } else {
+        failed += 1
+      }
+    })
+    if (deleted.size) {
+      setReviews((prev) => prev.filter((r) => !deleted.has(r.id)))
+    }
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} review${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected reviews')
+  }
 
   return (
     <div>
@@ -122,11 +229,74 @@ export default function ReviewsPage() {
             />
           </div>
 
+          {/* Select-all / bulk-actions bar */}
+          {canEdit && visibleIds.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+              <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                <Checkbox
+                  checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                  onCheckedChange={(v) => toggleSelectAll(v === true)}
+                  aria-label="Select all reviews"
+                />
+                <span>Select all</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {selectedVisibleCount} of {visibleIds.length} selected
+                </span>
+              </label>
+              {selectedIds.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
+                    {selectedIds.length} selected
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={bulkBusy}
+                    onClick={clearSelection}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={bulkBusy}
+                    onClick={() => handleBulkStatus('approved')}
+                  >
+                    <Check className="h-4 w-4 mr-1 text-green-600" />
+                    Approve
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={bulkBusy}
+                    onClick={() => handleBulkStatus('rejected')}
+                  >
+                    <X className="h-4 w-4 mr-1 text-destructive" />
+                    Reject
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={bulkBusy}
+                    onClick={() => setBulkDeleteOpen(true)}
+                  >
+                    Delete selected
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10" />
+                  {canEdit ? <TableHead className="w-10" /> : null}
                   <TableHead>Order</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Overall</TableHead>
@@ -141,7 +311,10 @@ export default function ReviewsPage() {
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={canEdit ? 11 : 10}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No order reviews yet.
                     </TableCell>
                   </TableRow>
@@ -149,9 +322,10 @@ export default function ReviewsPage() {
                   filtered.map((r) => {
                     const hasItems = r.items?.length > 0
                     const open = expanded[r.id]
+                    const selected = selectedIds.includes(r.id)
                     return (
                       <Fragment key={r.id}>
-                        <TableRow>
+                        <TableRow data-state={selected ? 'selected' : undefined}>
                           <TableCell>
                             {hasItems ? (
                               <Button
@@ -170,6 +344,15 @@ export default function ReviewsPage() {
                               </Button>
                             ) : null}
                           </TableCell>
+                          {canEdit ? (
+                            <TableCell>
+                              <Checkbox
+                                checked={selected}
+                                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                                aria-label={`Select review by ${r.customerName}`}
+                              />
+                            </TableCell>
+                          ) : null}
                           <TableCell>
                             <span className="font-mono text-xs">{shortOrderId(r.orderId)}</span>
                           </TableCell>
@@ -182,14 +365,19 @@ export default function ReviewsPage() {
                           </TableCell>
                           <TableCell className="text-sm">
                             {hasItems ? (
-                              <span className="max-w-[180px] truncate block" title={r.items.map((i) => i.productName).join(', ')}>
+                              <span
+                                className="max-w-[180px] truncate block"
+                                title={r.items.map((i) => i.productName).join(', ')}
+                              >
                                 {r.items.map((i) => i.productName).join(', ')}
                               </span>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
                           </TableCell>
-                          <TableCell className="capitalize text-sm">{r.source || 'tracking'}</TableCell>
+                          <TableCell className="capitalize text-sm">
+                            {r.source || 'tracking'}
+                          </TableCell>
                           <TableCell>
                             <StatusBadge status={r.status} />
                           </TableCell>
@@ -232,7 +420,10 @@ export default function ReviewsPage() {
                         </TableRow>
                         {open && hasItems && (
                           <TableRow>
-                            <TableCell colSpan={10} className="bg-muted/40 py-3">
+                            <TableCell
+                              colSpan={canEdit ? 11 : 10}
+                              className="bg-muted/40 py-3"
+                            >
                               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                                 Product ratings
                               </p>
@@ -259,6 +450,14 @@ export default function ReviewsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} review${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected reviews. This action cannot be undone."
+        onConfirm={handleBulkDelete}
+      />
     </div>
   )
 }

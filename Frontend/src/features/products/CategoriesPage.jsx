@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Pencil, Trash2, Upload } from 'lucide-react'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -8,7 +8,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { FormDialog } from '@/components/shared/FormDialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { FormDialog, FormSection } from '@/components/shared/FormDialog'
 import {
   BranchMultiScopeField,
   branchIdsFromRecord,
@@ -29,6 +37,14 @@ import { usePermission } from '@/hooks/usePermission'
 
 const emptyForm = { name: '', slug: '', image: '', sortOrder: '0', isVisible: true, branchIds: [] }
 
+/** Bulk edit uses "__unchanged__" sentinel so users can leave fields alone. */
+const UNCHANGED = '__unchanged__'
+
+const emptyBulkForm = {
+  isVisible: UNCHANGED,
+  sortOrder: '',
+}
+
 export default function CategoriesPage() {
   const dispatch = useAppDispatch()
   const { canManage } = usePermission()
@@ -43,6 +59,13 @@ export default function CategoriesPage() {
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(emptyBulkForm)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const resetAndClose = () => {
     setOpen(false)
@@ -136,7 +159,137 @@ export default function CategoriesPage() {
     }
   }
 
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => categories.map((c) => c.id), [categories])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteCategoryRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(deleteCategory(ids[idx]))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} categor${ok === 1 ? 'y' : 'ies'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected categories')
+  }
+
+  // ---- Bulk edit ----
+  const openBulkEdit = () => {
+    setBulkForm(emptyBulkForm)
+    setBulkEditOpen(true)
+  }
+
+  const closeBulkEdit = () => {
+    setBulkEditOpen(false)
+    setBulkForm(emptyBulkForm)
+  }
+
+  const buildBulkPayload = (c) => {
+    const scope = branchIdsToApi(branchIdsFromRecord(c.branchId, c.branchIds))
+    const payload = {
+      name: c.name,
+      slug: c.slug || undefined,
+      image: c.image || '',
+      sortOrder: Number(c.sortOrder ?? 0),
+      isVisible: c.isVisible !== false,
+      branchId: scope.branchId,
+      branchIds: scope.branchIds,
+    }
+    if (bulkForm.isVisible !== UNCHANGED) payload.isVisible = bulkForm.isVisible === 'yes'
+    if (bulkForm.sortOrder.trim() !== '') {
+      payload.sortOrder = parseInt(bulkForm.sortOrder, 10) || 0
+    }
+    return payload
+  }
+
+  const handleBulkEdit = async () => {
+    if (!token || selectedIds.length === 0) return
+    const selected = categories.filter((c) => selectedIds.includes(c.id))
+    if (selected.length === 0) {
+      closeBulkEdit()
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      selected.map((c) => updateCategoryRequest(token, c.id, buildBulkPayload(c))),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(updateCategory(r.value))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    closeBulkEdit()
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Updated ${ok} categor${ok === 1 ? 'y' : 'ies'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Updated ${ok}, failed ${failed}`)
+    else toast.error('Failed to update selected categories')
+  }
+
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.name}`}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       header: '',
       render: (r) => {
@@ -182,7 +335,56 @@ export default function CategoriesPage() {
         actionLabel={canEdit ? 'Add Category' : undefined}
         onAction={canEdit ? openCreate : undefined}
       />
+
+      {/* Select-all / bulk-actions bar */}
+      {canEdit && categories.length > 0 ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <Checkbox
+              checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+              onCheckedChange={(v) => toggleSelectAll(v === true)}
+              aria-label="Select all categories"
+            />
+            <span>Select all</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {selectedVisibleCount} of {visibleIds.length} selected
+            </span>
+          </label>
+          {selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.length} selected
+              </span>
+              <Button type="button" variant="ghost" size="sm" onClick={clearSelection}>
+                Clear
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={openBulkEdit}
+              >
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit selected
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete selected
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <DataTable data={categories} columns={columns} searchKey="name" />
+
       <FormDialog
         open={open}
         onOpenChange={handleOpenChange}
@@ -246,12 +448,67 @@ export default function CategoriesPage() {
           />
         </div>
       </FormDialog>
+
+      {/* ---- Bulk Edit dialog ---- */}
+      <FormDialog
+        open={bulkEditOpen}
+        onOpenChange={(next) => !next && closeBulkEdit()}
+        title={`Edit ${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'}`}
+        description="Only fields you change here will be applied. Leave a field as 'Keep current' to leave it untouched."
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={closeBulkEdit} disabled={bulkBusy}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleBulkEdit} disabled={bulkBusy || !canEdit}>
+              {bulkBusy ? 'Saving…' : 'Apply changes'}
+            </Button>
+          </>
+        }
+      >
+        <FormSection title="Visibility & order">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Visible on website</Label>
+              <Select
+                value={bulkForm.isVisible}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, isVisible: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="yes">Visible</SelectItem>
+                  <SelectItem value="no">Hidden</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Sort order</Label>
+              <Input
+                type="number"
+                value={bulkForm.sortOrder}
+                placeholder="Keep current"
+                onChange={(e) => setBulkForm({ ...bulkForm, sortOrder: e.target.value })}
+              />
+            </div>
+          </div>
+        </FormSection>
+      </FormDialog>
+
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(o) => !o && setDeleteId(null)}
         title="Delete Category"
         description="Delete this category?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'}?`}
+        description="This will permanently remove the selected categories. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

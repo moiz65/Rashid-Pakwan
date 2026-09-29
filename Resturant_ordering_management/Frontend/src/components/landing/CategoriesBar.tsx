@@ -1,8 +1,11 @@
-import { motion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useMenuStore } from "@/store/MenuStore";
 
+/*
+  Minimal desi biryani palette
+  brown  #3A0F0A   saffron #F29C1F   cream #FFF1D0
+*/
 export function Categories({ sticky = false }: { sticky?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -19,7 +22,7 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
   }, [loadMenu]);
 
   const chips = [
-    { id: "all", name: "All Menu", slug: null as string | null, count: products.length, target: "menu-products" },
+    { id: "all", name: "All menu", slug: null as string | null, count: products.length, target: "menu-products" },
     { id: "deals-nav", name: "Deals", slug: "__deals__" as string | null, count: 0, target: "deals" },
     ...categories.map((c) => ({
       id: c.id,
@@ -52,9 +55,12 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
   // Highlight only — do not filter other categories out of the menu.
   const isAllActive = !activeCategorySlug;
 
+  const arrowClass =
+    "absolute z-10 h-7 w-7 rounded-full bg-[#FFF1D0] text-[#3A0F0A] flex items-center justify-center hover:bg-white transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F29C1F]";
+
   return (
     <div
-      className={`w-full bg-gradient-primary shadow-md border-y border-primary/40 ${
+      className={`w-full bg-[#3A0F0A] border-b-0 border-[#F29C1F] ${
         sticky ? "sticky top-[74px] sm:top-[80px] md:top-[128px] lg:top-[136px] z-40" : ""
       }`}
     >
@@ -62,8 +68,8 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
         {showLeft && (
           <button
             onClick={() => scroll("left")}
-            aria-label="Scroll Left"
-            className="absolute left-2 z-10 h-7 w-7 rounded-full bg-white/90 text-primary shadow-md flex items-center justify-center hover:bg-white transition-all cursor-pointer"
+            aria-label="Scroll left"
+            className={`${arrowClass} left-2`}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -83,10 +89,9 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
                   ? isAllActive
                   : activeCategorySlug === category.slug;
             return (
-              <motion.button
+              <button
                 key={category.id}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                aria-current={isActive ? "true" : undefined}
                 onClick={() => {
                   if (category.slug === "__deals__") {
                     clearCategoryFilter();
@@ -115,14 +120,14 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
                     }
                   }, 60);
                 }}
-                className={`shrink-0 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer ${
+                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F] ${
                   isActive
-                    ? "bg-white text-primary shadow-lg ring-2 ring-white/50"
-                    : "bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                    ? "bg-[#F29C1F] text-[#3A0F0A]"
+                    : "text-[#FFF1D0]/80 hover:text-[#F29C1F]"
                 }`}
               >
                 {category.name}
-              </motion.button>
+              </button>
             );
           })}
         </div>
@@ -130,8 +135,8 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
         {showRight && (
           <button
             onClick={() => scroll("right")}
-            aria-label="Scroll Right"
-            className="absolute right-2 z-10 h-7 w-7 rounded-full bg-white/90 text-primary shadow-md flex items-center justify-center hover:bg-white transition-all cursor-pointer"
+            aria-label="Scroll right"
+            className={`${arrowClass} right-2`}
           >
             <ChevronRight className="h-4 w-4" />
           </button>

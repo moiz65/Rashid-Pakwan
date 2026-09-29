@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormDialog, FormSection } from '@/components/shared/FormDialog'
 import {
@@ -66,6 +67,15 @@ const TYPE_LABELS = {
   free_delivery: 'Free delivery',
 }
 
+/** Bulk edit uses "__unchanged__" sentinel so users can leave fields alone. */
+const UNCHANGED = '__unchanged__'
+
+const emptyBulkForm = {
+  active: UNCHANGED,
+  endDateMode: UNCHANGED,
+  endDateValue: '',
+}
+
 export default function OffersPage() {
   const dispatch = useAppDispatch()
   const offers = useAppSelector(selectBranchOffers)
@@ -83,6 +93,13 @@ export default function OffersPage() {
   const { products, drinks, addons } = useCatalogForBranchScope(form.branchScope)
   const branchNames = useAppSelector(selectBranchNameById)
   const showBranchInPicker = !form.branchScope || form.branchScope === BRANCH_SCOPE_ALL
+
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [bulkForm, setBulkForm] = useState(emptyBulkForm)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const menuItems = useMemo(() => {
     const label = (name, branchId) => {
@@ -247,6 +264,7 @@ export default function OffersPage() {
     try {
       await deleteOfferRequest(token, deleteId)
       dispatch(deleteOffer(deleteId))
+      setSelectedIds((prev) => prev.filter((x) => x !== deleteId))
       toast.success('Deleted')
       setDeleteId(null)
     } catch (err) {
@@ -254,7 +272,153 @@ export default function OffersPage() {
     }
   }
 
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => offers.map((o) => o.id), [offers])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const results = await Promise.allSettled(
+      ids.map((id) => deleteOfferRequest(token, id)),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(deleteOffer(ids[idx]))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} offer${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected offers')
+  }
+
+  // ---- Bulk edit ----
+  const openBulkEdit = () => {
+    setBulkForm(emptyBulkForm)
+    setBulkEditOpen(true)
+  }
+
+  const closeBulkEdit = () => {
+    setBulkEditOpen(false)
+    setBulkForm(emptyBulkForm)
+  }
+
+  const buildBulkPayload = (o) => {
+    const payload = {
+      title: o.title,
+      description: o.description || '',
+      type: o.type,
+      discountValue: Number(o.discountValue) || 0,
+      minOrder: Number(o.minOrder) || 0,
+      maxDiscount: o.maxDiscount != null ? Number(o.maxDiscount) : null,
+      buyQty: Number(o.buyQty) || 1,
+      getQty: Number(o.getQty) || 1,
+      applyScope: o.applyScope || 'all',
+      categoryId: o.categoryId || null,
+      productIds: Array.isArray(o.productIds) ? o.productIds : [],
+      buyProductIds: Array.isArray(o.buyProductIds) ? o.buyProductIds : [],
+      getProductIds: Array.isArray(o.getProductIds) ? o.getProductIds : [],
+      freeProductId: o.freeProductId || null,
+      taxCodeId: o.taxCodeId || null,
+      taxMode: o.taxMode || 'inclusive',
+      active: o.active !== false,
+      startDate: o.startDate ? new Date(o.startDate).toISOString() : null,
+      endDate: o.endDate ? new Date(o.endDate).toISOString() : null,
+      branchId: branchScopeToApi(branchScopeFromRecord(o.branchId)),
+    }
+    if (bulkForm.active !== UNCHANGED) payload.active = bulkForm.active === 'yes'
+    if (bulkForm.endDateMode === 'set') {
+      payload.endDate = bulkForm.endDateValue
+        ? new Date(bulkForm.endDateValue).toISOString()
+        : null
+    } else if (bulkForm.endDateMode === 'clear') {
+      payload.endDate = null
+    }
+    return payload
+  }
+
+  const handleBulkEdit = async () => {
+    if (!token || selectedIds.length === 0) return
+    const selected = offers.filter((o) => selectedIds.includes(o.id))
+    if (selected.length === 0) {
+      closeBulkEdit()
+      return
+    }
+    setBulkBusy(true)
+    const results = await Promise.allSettled(
+      selected.map((o) => updateOfferRequest(token, o.id, buildBulkPayload(o))),
+    )
+    let ok = 0
+    let failed = 0
+    results.forEach((r) => {
+      if (r.status === 'fulfilled') {
+        ok += 1
+        dispatch(updateOffer(r.value))
+      } else {
+        failed += 1
+      }
+    })
+    setBulkBusy(false)
+    closeBulkEdit()
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Updated ${ok} offer${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Updated ${ok}, failed ${failed}`)
+    else toast.error('Failed to update selected offers')
+  }
+
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.title}`}
+              />
+            ),
+          },
+        ]
+      : []),
     { header: 'Title', key: 'title' },
     { header: 'Type', render: (r) => TYPE_LABELS[r.type] || r.type },
     {
@@ -307,6 +471,48 @@ export default function OffersPage() {
         description="Automatic promotions (no code) — shown on the website. Different from Coupons (code at checkout), Discounts (menu sale prices), and Deals (fixed combos)."
         action={canEdit ? <Button onClick={openCreate}>Add Offer</Button> : undefined}
       />
+
+      {/* Select-all / bulk-actions bar */}
+      {canEdit && offers.length > 0 ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <Checkbox
+              checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+              onCheckedChange={(v) => toggleSelectAll(v === true)}
+              aria-label="Select all offers"
+            />
+            <span>Select all</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              {selectedVisibleCount} of {visibleIds.length} selected
+            </span>
+          </label>
+          {selectedIds.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.length} selected
+              </span>
+              <Button type="button" variant="ghost" size="sm" disabled={bulkBusy} onClick={clearSelection}>
+                Clear
+              </Button>
+              <Button type="button" variant="outline" size="sm" disabled={bulkBusy} onClick={openBulkEdit}>
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit selected
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete selected
+              </Button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <DataTable data={offers} columns={columns} searchKey="title" searchPlaceholder="Search offers..." />
 
       <FormDialog
@@ -513,12 +719,84 @@ export default function OffersPage() {
         </FormSection>
       </FormDialog>
 
+      {/* ---- Bulk Edit dialog ---- */}
+      <FormDialog
+        open={bulkEditOpen}
+        onOpenChange={(next) => !next && closeBulkEdit()}
+        title={`Edit ${selectedIds.length} offer${selectedIds.length === 1 ? '' : 's'}`}
+        description="Only fields you change here will be applied. Leave a field as 'Keep current' to leave it untouched."
+        footer={
+          <>
+            <Button type="button" variant="outline" onClick={closeBulkEdit} disabled={bulkBusy}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleBulkEdit} disabled={bulkBusy || !canEdit}>
+              {bulkBusy ? 'Saving…' : 'Apply changes'}
+            </Button>
+          </>
+        }
+      >
+        <FormSection title="Status">
+          <div className="grid gap-2">
+            <Label>Active</Label>
+            <Select
+              value={bulkForm.active}
+              onValueChange={(v) => setBulkForm({ ...bulkForm, active: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                <SelectItem value="yes">Active</SelectItem>
+                <SelectItem value="no">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </FormSection>
+
+        <FormSection title="End date">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>End date action</Label>
+              <Select
+                value={bulkForm.endDateMode}
+                onValueChange={(v) => setBulkForm({ ...bulkForm, endDateMode: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UNCHANGED}>Keep current</SelectItem>
+                  <SelectItem value="set">Set new end date</SelectItem>
+                  <SelectItem value="clear">Clear end date (no expiry)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {bulkForm.endDateMode === 'set' ? (
+              <div className="grid gap-2">
+                <Label>New end date</Label>
+                <Input
+                  type="date"
+                  value={bulkForm.endDateValue}
+                  onChange={(e) => setBulkForm({ ...bulkForm, endDateValue: e.target.value })}
+                />
+              </div>
+            ) : null}
+          </div>
+        </FormSection>
+      </FormDialog>
+
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={(o) => !o && setDeleteId(null)}
         title="Delete Offer"
         description="Remove this offer?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} offer${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected offers. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )

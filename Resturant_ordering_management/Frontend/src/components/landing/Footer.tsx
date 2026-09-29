@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { fetchTrackingSettings } from "@/lib/api";
 
+/*
+  Minimal desi biryani palette
+  brown  #3A0F0A   saffron #F29C1F   cream #FFF1D0
+*/
 export function Footer() {
   const [phone, setPhone] = useState("");
   const [brand, setBrand] = useState("Rashid Pakwan");
@@ -21,32 +25,35 @@ export function Footer() {
 
   const telHref = phone ? `tel:${phone.replace(/\s+/g, "")}` : undefined;
 
+  const linkClass =
+    "hover:text-[#F29C1F] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F] rounded-sm";
+
   return (
-    <footer className="border-t border-border bg-surface/60">
+    <footer className="bg-[#3A0F0A] text-[#FFF1D0] border-t-2 border-[#F29C1F]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <p className="font-display font-bold text-lg">{brand}</p>
-          <p className="text-sm text-muted-foreground mt-1">Order online · Fresh · Fast</p>
+          <p className="font-display font-bold text-lg text-[#F29C1F]">{brand}</p>
+          <p className="text-sm text-[#FFF1D0]/70 mt-1">Fresh biryani, delivered fast.</p>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <a href="#deals" className="hover:text-primary transition-colors">
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#FFF1D0]/80">
+          <a href="#deals" className={linkClass}>
             Deals
           </a>
-          <a href="#offers" className="hover:text-primary transition-colors">
+          <a href="#offers" className={linkClass}>
             Offers
           </a>
-          <a href="#menu-products" className="hover:text-primary transition-colors">
-            Menu
+          <a href="#menu-products" className={linkClass}>
+            Biryani menu
           </a>
           {telHref ? (
-            <a href={telHref} className="hover:text-primary transition-colors">
-              Call us{phone ? ` · ${phone}` : ""}
+            <a href={telHref} className={linkClass}>
+              Call {phone}
             </a>
           ) : null}
-        </div>
+        </nav>
       </div>
-      <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 text-xs text-muted-foreground">
+      <div className="border-t border-[#FFF1D0]/15">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 text-xs text-[#FFF1D0]/60">
           © {new Date().getFullYear()} {brand}. All rights reserved.
         </div>
       </div>

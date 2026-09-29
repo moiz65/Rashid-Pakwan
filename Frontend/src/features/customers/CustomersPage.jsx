@@ -8,6 +8,7 @@ import { FormDialog } from '@/components/shared/FormDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -81,6 +82,11 @@ export default function CustomersPage() {
   }
   const [saving, setSaving] = useState(false)
   const [filters, setFilters] = useState(defaultFilters)
+
+  // ---- Selection state ----
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   const setFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }))
 
@@ -170,10 +176,12 @@ export default function CustomersPage() {
       if (target && isDemoRecord(target)) {
         dispatch(deleteDemoCustomer(deleteId))
         toast.success('Demo customer deleted')
+        setSelectedIds((prev) => prev.filter((x) => x !== deleteId))
         return
       }
       await deleteCustomerRequest(token, deleteId)
       dispatch(deleteCustomer(deleteId))
+      setSelectedIds((prev) => prev.filter((x) => x !== deleteId))
       toast.success('Customer deleted')
     } catch (err) {
       toast.error(err.message || 'Failed to delete customer')
@@ -182,7 +190,96 @@ export default function CustomersPage() {
     }
   }
 
+  // ---- Selection helpers ----
+  const visibleIds = useMemo(() => filteredCustomers.map((c) => c.id), [filteredCustomers])
+  const selectedVisibleCount = useMemo(
+    () => visibleIds.filter((id) => selectedIds.includes(id)).length,
+    [visibleIds, selectedIds],
+  )
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+
+  const toggleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleIds])))
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)))
+    }
+  }
+
+  const toggleSelectOne = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter((x) => x !== id),
+    )
+  }
+
+  const clearSelection = () => setSelectedIds([])
+
+  // ---- Bulk delete ----
+  const handleBulkDelete = async () => {
+    if (!token || selectedIds.length === 0) return
+    setBulkBusy(true)
+    const ids = [...selectedIds]
+    const selectedCustomers = customers.filter((c) => ids.includes(c.id))
+
+    // Split demo vs real records
+    const demoIds = selectedCustomers.filter((c) => isDemoRecord(c)).map((c) => c.id)
+    const realIds = selectedCustomers.filter((c) => !isDemoRecord(c)).map((c) => c.id)
+
+    let ok = 0
+    let failed = 0
+
+    // Demo: local-only delete
+    demoIds.forEach((id) => {
+      dispatch(deleteDemoCustomer(id))
+      ok += 1
+    })
+
+    // Real: hit the API in parallel
+    if (realIds.length > 0) {
+      const results = await Promise.allSettled(
+        realIds.map((id) => deleteCustomerRequest(token, id)),
+      )
+      results.forEach((r, idx) => {
+        if (r.status === 'fulfilled') {
+          ok += 1
+          dispatch(deleteCustomer(realIds[idx]))
+        } else {
+          failed += 1
+        }
+      })
+    }
+
+    setBulkBusy(false)
+    setBulkDeleteOpen(false)
+    clearSelection()
+    if (ok > 0 && failed === 0) toast.success(`Deleted ${ok} customer${ok === 1 ? '' : 's'}`)
+    else if (ok > 0 && failed > 0) toast.error(`Deleted ${ok}, failed ${failed}`)
+    else toast.error('Failed to delete selected customers')
+  }
+
   const columns = [
+    // Select-all checkbox column
+    ...(canEdit
+      ? [
+          {
+            header: (
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all"
+              />
+            ),
+            render: (r) => (
+              <Checkbox
+                checked={selectedIds.includes(r.id)}
+                onCheckedChange={(v) => toggleSelectOne(r.id, v === true)}
+                aria-label={`Select ${r.name}`}
+              />
+            ),
+          },
+        ]
+      : []),
     { header: 'Name', key: 'name' },
     ...(allMode
       ? [{ header: 'Branch', render: (r) => <BranchBadge branchId={r.branchId} /> }]
@@ -292,6 +389,48 @@ export default function CustomersPage() {
             {' '}of {customers.length} customers
           </p>
         </div>
+
+        {/* Select-all / bulk-actions bar */}
+        {canEdit && visibleIds.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2">
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <Checkbox
+                checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleSelectAll(v === true)}
+                aria-label="Select all customers"
+              />
+              <span>Select all</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {selectedVisibleCount} of {visibleIds.length} selected
+              </span>
+            </label>
+            {selectedIds.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {selectedIds.length} selected
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={bulkBusy}
+                  onClick={clearSelection}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={bulkBusy}
+                  onClick={() => setBulkDeleteOpen(true)}
+                >
+                  Delete selected
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <DataTable
@@ -362,6 +501,14 @@ export default function CustomersPage() {
         title="Delete Customer"
         description="Are you sure you want to delete this customer?"
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(next) => !next && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.length} customer${selectedIds.length === 1 ? '' : 's'}?`}
+        description="This will permanently remove the selected customers. This action cannot be undone."
+        onConfirm={handleBulkDelete}
       />
     </div>
   )
