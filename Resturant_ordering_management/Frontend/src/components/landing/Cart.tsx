@@ -16,6 +16,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { formatAmount } from "@/lib/formatters";
 
+/*
+  Minimal desi biryani palette (GLASSMORPHIC CART VIBE)
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
+*/
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
+
 type CartItem = {
   id: string;
   name: string;
@@ -55,14 +62,12 @@ type DisplayRow =
       title: string;
       src: string;
       currency: string;
-      /** Sum of paid lines only (free items listed under includes) */
       lineTotal: number;
       quantity: number;
       includedItems: string[];
       memberIds: string[];
     };
 
-/** Group legacy multi-line BOGO rows ("Part of offer: …") into one deal card. */
 function buildDisplayRows(items: CartItem[]): DisplayRow[] {
   const offerGroups = new Map<
     string,
@@ -89,8 +94,7 @@ function buildDisplayRows(items: CartItem[]): DisplayRow[] {
             item.includedItems?.length
               ? item.includedItems
               : item.offerBundle.lines.map(
-                  (l) =>
-                    `${l.qty}× ${l.name}${l.role === "get" ? " (FREE)" : ""}`
+                  (l) => `${l.qty}× ${l.name}${l.role === "get" ? " (FREE)" : ""}`
                 ),
         },
       });
@@ -206,29 +210,69 @@ export function Cart({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-50"
+          style={{
+            background:
+              "radial-gradient(120% 80% at 100% 0%, rgba(0, 0, 0, 0.25), transparent 55%), radial-gradient(120% 80% at 0% 100%, rgba(0, 0, 0, 0.25), transparent 55%), rgba(0, 0, 0, 0.55)",
+            backdropFilter: "blur(14px) saturate(140%)",
+            WebkitBackdropFilter: "blur(14px) saturate(140%)",
+          }}
           onClick={onClose}
         >
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="absolute right-0 top-0 h-full w-full max-w-md bg-card border-l border-border shadow-2xl flex flex-col"
+            initial={{ x: "100%", opacity: 0.4 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0.4 }}
+            transition={{ type: "spring", damping: 28, stiffness: 280 }}
+            className="absolute right-0 top-0 h-full w-full max-w-md flex flex-col overflow-hidden border-l border-[#FFF1D0]/25 shadow-[0_0_80px_-10px_rgba(58,15,10,0.6)]"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,248,231,0.92) 0%, rgba(255,241,208,0.88) 100%)",
+              backdropFilter: "blur(24px) saturate(160%)",
+              WebkitBackdropFilter: "blur(24px) saturate(160%)",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 p-5 border-b border-border bg-card/95 backdrop-blur">
+            {/* Ambient saffron glow in the top-right corner */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(242,156,31,0.55) 0%, rgba(242,156,31,0) 70%)",
+              }}
+            />
+            {/* Ambient chilli glow bottom-left */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full opacity-30 blur-3xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(185,58,14,0.5) 0%, rgba(185,58,14,0) 70%)",
+              }}
+            />
+
+            {/* Header */}
+            <div className="relative z-10 p-5 border-b border-[#840608]/12">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-bold">Your Cart</h2>
-                  {itemCount > 0 && (
-                    <span className="text-xs text-muted-foreground">({itemCount})</span>
-                  )}
+                  <div className="grid place-items-center h-10 w-10 rounded-2xl bg-[#840608] text-[#F29C1F] border border-[#F29C1F]/30 shadow-md">
+                    <ShoppingBag className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[#840608] leading-tight">
+                      Your Cart
+                    </h2>
+                    <p className="text-[11px] text-[#840608]/60 leading-tight">
+                      {itemCount > 0
+                        ? `${itemCount} item${itemCount === 1 ? "" : "s"} · ready to checkout`
+                        : "Nothing here yet"}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="h-9 w-9 rounded-full bg-surface hover:bg-primary/10 transition-colors flex items-center justify-center cursor-pointer"
+                  className={`h-9 w-9 rounded-full bg-[#FFF8E7]/80 hover:bg-[#840608] hover:text-[#F29C1F] text-[#840608] transition-all flex items-center justify-center cursor-pointer border border-[#840608]/15 shadow-sm ${focusRing}`}
                   aria-label="Close cart"
                 >
                   <X className="h-4 w-4" />
@@ -236,14 +280,17 @@ export function Cart({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            {/* Items */}
+            <div className="relative z-10 flex-1 overflow-y-auto p-4 space-y-3">
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="h-20 w-20 rounded-full bg-surface flex items-center justify-center mb-4">
-                    <ShoppingBag className="h-10 w-10 text-muted-foreground/30" />
+                  <div className="h-24 w-24 rounded-full bg-gradient-to-br from-[#F29C1F]/20 to-[#B93A0E]/10 flex items-center justify-center mb-5 border border-[#F29C1F]/30 shadow-inner">
+                    <ShoppingBag className="h-10 w-10 text-[#B93A0E]" />
                   </div>
-                  <h3 className="text-base font-semibold mb-1">Cart is empty</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <h3 className="text-base font-bold mb-1 text-[#840608]">
+                    Cart is empty
+                  </h3>
+                  <p className="text-sm text-[#840608]/65 mb-5 max-w-[220px]">
                     Add something delicious to get started.
                   </p>
                   <button
@@ -254,58 +301,67 @@ export function Cart({
                         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
                       });
                     }}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-primary text-primary-foreground text-sm font-medium cursor-pointer"
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#840608] text-[#F29C1F] text-sm font-semibold cursor-pointer hover:bg-[#5A1A10] transition-colors shadow-lg ${focusRing}`}
                   >
                     Browse menu
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
-                displayRows.map((row) => {
+                displayRows.map((row, idx) => {
                   if (row.kind === "offer") {
                     return (
-                      <div
+                      <motion.div
                         key={row.key}
-                        className="flex gap-3 p-3 rounded-2xl bg-surface/50 border border-border"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="relative flex gap-3 p-3 rounded-2xl bg-[#FFF8E7]/90 border border-[#F29C1F]/40 shadow-[0_4px_16px_-4px_rgba(58,15,10,0.12)] hover:shadow-[0_8px_24px_-6px_rgba(58,15,10,0.2)] hover:border-[#F29C1F]/70 transition-all"
                       >
-                        <div className="h-16 w-16 rounded-xl overflow-hidden bg-surface shrink-0 relative">
+                        <div className="h-16 w-16 rounded-xl overflow-hidden bg-[#FFF1D0] shrink-0 relative border border-[#840608]/10">
                           {row.src ? (
-                            <img src={row.src} alt="" className="h-full w-full object-cover" />
+                            <img
+                              src={row.src}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <div className="h-full w-full grid place-items-center">
-                              <Tag className="h-6 w-6 text-primary" />
+                              <Tag className="h-6 w-6 text-[#B93A0E]" />
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-[#B93A0E]">
                                 Offer
                               </p>
-                              <h4 className="font-semibold text-sm truncate">{row.title}</h4>
+                              <h4 className="font-semibold text-sm truncate text-[#840608]">
+                                {row.title}
+                              </h4>
                               {row.includedItems.length ? (
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-[#840608]/65 mt-0.5">
                                   Includes: {row.includedItems.join(", ")}
                                 </p>
                               ) : null}
                             </div>
                             <button
                               onClick={() => removeOfferGroup(row.memberIds)}
-                              className="h-8 w-8 rounded-full hover:bg-red-500/10 text-muted-foreground hover:text-red-500 flex items-center justify-center shrink-0 cursor-pointer"
+                              className={`h-8 w-8 rounded-full hover:bg-[#B93A0E]/10 text-[#840608]/60 hover:text-[#B93A0E] flex items-center justify-center shrink-0 cursor-pointer transition-colors ${focusRing}`}
                               aria-label={`Remove ${row.title}`}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-sm font-bold">
+                            <span className="text-sm font-bold text-[#840608]">
                               {row.currency}
                               {formatAmount(row.lineTotal)}
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   }
 
@@ -313,22 +369,29 @@ export function Cart({
                   const isOffer = Boolean(item.offerBundle);
                   const addonUnitTotal = (item.selectedAddons || []).reduce(
                     (sum, addon) => sum + addon.price * (addon.quantity || 1),
-                    0,
+                    0
                   );
                   const productPrice =
                     item.productPrice ??
                     Math.max(0, item.price - addonUnitTotal - (item.selectedDrink?.price || 0));
                   return (
-                    <div
+                    <motion.div
                       key={item.id}
-                      className="flex gap-3 p-3 rounded-2xl bg-surface/50 border border-border"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className="relative flex gap-3 p-3 rounded-2xl bg-[#FFF8E7]/90 border border-[#840608]/10 shadow-[0_4px_16px_-4px_rgba(58,15,10,0.12)] hover:shadow-[0_8px_24px_-6px_rgba(58,15,10,0.2)] hover:border-[#F29C1F]/60 transition-all"
                     >
-                      <div className="h-16 w-16 rounded-xl overflow-hidden bg-surface shrink-0">
+                      <div className="h-16 w-16 rounded-xl overflow-hidden bg-[#FFF1D0] shrink-0 border border-[#840608]/10 shadow-inner">
                         {item.src ? (
-                          <img src={item.src} alt="" className="h-full w-full object-cover" />
+                          <img
+                            src={item.src}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
                         ) : isOffer ? (
                           <div className="h-full w-full grid place-items-center">
-                            <Tag className="h-6 w-6 text-primary" />
+                            <Tag className="h-6 w-6 text-[#B93A0E]" />
                           </div>
                         ) : null}
                       </div>
@@ -336,19 +399,21 @@ export function Cart({
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             {isOffer ? (
-                              <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-[#B93A0E]">
                                 Offer
                               </p>
                             ) : null}
-                            <h4 className="font-semibold text-sm truncate">{item.name}</h4>
+                            <h4 className="font-semibold text-sm truncate text-[#840608]">
+                              {item.name}
+                            </h4>
                             {item.includedItems?.length ? (
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-xs text-[#840608]/65 mt-0.5">
                                 Includes: {item.includedItems.join(", ")}
                               </p>
                             ) : null}
                             {!isOffer ? (
                               <div className="mt-1 space-y-0.5">
-                                <div className="flex justify-between gap-2 text-xs text-muted-foreground">
+                                <div className="flex justify-between gap-2 text-xs text-[#840608]/65">
                                   <span>{item.productLabel || item.name}</span>
                                   <span className="shrink-0 tabular-nums">
                                     {item.currency}
@@ -356,14 +421,16 @@ export function Cart({
                                   </span>
                                 </div>
                                 {item.selectedDrink ? (
-                                  <div className="flex justify-between gap-2 text-xs text-muted-foreground">
+                                  <div className="flex justify-between gap-2 text-xs text-[#840608]/65">
                                     <span>
                                       {item.selectedDrink.name}
                                       {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                                     </span>
                                     <span className="shrink-0 tabular-nums">
                                       {item.currency}
-                                      {formatAmount(item.selectedDrink.price * item.quantity)}
+                                      {formatAmount(
+                                        item.selectedDrink.price * item.quantity
+                                      )}
                                     </span>
                                   </div>
                                 ) : null}
@@ -374,7 +441,7 @@ export function Cart({
                                 {item.selectedAddons.map((addon) => (
                                   <div
                                     key={addon.id}
-                                    className="flex justify-between gap-2 text-xs text-muted-foreground"
+                                    className="flex justify-between gap-2 text-xs text-[#840608]/65"
                                   >
                                     <span>
                                       {addon.name}
@@ -384,18 +451,22 @@ export function Cart({
                                     </span>
                                     <span className="shrink-0 tabular-nums">
                                       {item.currency}
-                                      {formatAmount(addon.price * (addon.quantity || 1) * item.quantity)}
+                                      {formatAmount(
+                                        addon.price *
+                                          (addon.quantity || 1) *
+                                          item.quantity
+                                      )}
                                     </span>
                                   </div>
                                 ))}
                               </div>
                             ) : item.addons?.length ? (
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <p className="text-xs text-[#840608]/65 mt-0.5">
                                 Extras: {item.addons.join(", ")}
                               </p>
                             ) : null}
                             {item.specialInstructions && !isOffer ? (
-                              <p className="text-xs text-muted-foreground mt-0.5 flex items-start gap-1">
+                              <p className="text-xs text-[#840608]/65 mt-0.5 flex items-start gap-1">
                                 <MessageSquare className="h-3 w-3 mt-0.5 shrink-0" />
                                 <span>{item.specialInstructions}</span>
                               </p>
@@ -403,33 +474,35 @@ export function Cart({
                           </div>
                           <button
                             onClick={() => onRemoveItem(item.id)}
-                            className="h-8 w-8 rounded-full hover:bg-red-500/10 text-muted-foreground hover:text-red-500 flex items-center justify-center shrink-0 cursor-pointer"
+                            className={`h-8 w-8 rounded-full hover:bg-[#B93A0E]/10 text-[#840608]/60 hover:text-[#B93A0E] flex items-center justify-center shrink-0 cursor-pointer transition-colors ${focusRing}`}
                             aria-label={`Remove ${item.name}`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm font-bold">
+                          <span className="text-sm font-bold text-[#840608]">
                             {item.currency}
                             {formatAmount(item.price * item.quantity)}
                           </span>
                           {!isOffer ? (
-                            <div className="flex items-center gap-1 bg-card rounded-full border border-border p-0.5">
+                            <div className="flex items-center gap-1 bg-[#FFF1D0]/80 rounded-full border border-[#840608]/15 p-0.5 backdrop-blur-sm">
                               <button
                                 onClick={() =>
                                   onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))
                                 }
-                                className="h-7 w-7 rounded-full hover:bg-primary/10 flex items-center justify-center cursor-pointer"
+                                className={`h-7 w-7 rounded-full hover:bg-[#F29C1F]/40 flex items-center justify-center cursor-pointer text-[#840608] transition-colors ${focusRing}`}
+                                aria-label={`Decrease ${item.name} quantity`}
                               >
                                 <Minus className="h-3 w-3" />
                               </button>
-                              <span className="w-7 text-center text-sm font-medium">
+                              <span className="w-7 text-center text-sm font-medium tabular-nums text-[#840608]">
                                 {item.quantity}
                               </span>
                               <button
                                 onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                                className="h-7 w-7 rounded-full hover:bg-primary/10 flex items-center justify-center cursor-pointer"
+                                className={`h-7 w-7 rounded-full hover:bg-[#F29C1F]/40 flex items-center justify-center cursor-pointer text-[#840608] transition-colors ${focusRing}`}
+                                aria-label={`Increase ${item.name} quantity`}
                               >
                                 <Plus className="h-3 w-3" />
                               </button>
@@ -437,38 +510,43 @@ export function Cart({
                           ) : null}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               )}
             </div>
 
+            {/* Footer */}
             {items.length > 0 && (
-              <div className="sticky bottom-0 p-5 border-t border-border bg-card/95 backdrop-blur space-y-3">
-                <div className="flex justify-between text-sm font-bold">
-                  <span>Subtotal</span>
-                  <span className="text-primary">
-                    {currency}
-                    {formatAmount(subtotal)}
-                  </span>
-                </div>
+              <div className="relative z-10 p-5 border-t border-[#840608]/12">
+                <div className="rounded-3xl bg-[#840608] border border-[#F29C1F]/40 p-4 shadow-[0_10px_30px_-10px_rgba(58,15,10,0.5)]">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs uppercase tracking-widest text-[#FFF] font-semibold">
+                      Subtotal
+                    </span>
+                    <span className="text-xl font-bold text-[#F29C1F] tabular-nums">
+                      {currency}
+                      {formatAmount(subtotal)}
+                    </span>
+                  </div>
 
-                <button
-                  onClick={handleCheckout}
-                  disabled={isCheckingOut}
-                  className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-primary text-primary-foreground font-medium shadow-glow disabled:opacity-70 cursor-pointer"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  {isCheckingOut ? "Opening checkout…" : "Checkout"}
-                </button>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={isCheckingOut}
+                    className={`mt-3 w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-[#F5f5f5] text-[#840608] font-bold hover:bg-[#FFF1D0] disabled:opacity-70 cursor-pointer transition-all shadow-[0_8px_20px_-8px_rgba(242,156,31,0.8)] ${focusRing}`}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    {isCheckingOut ? "Opening checkout…" : "Checkout"}
+                  </button>
 
-                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Truck className="h-3 w-3" /> Delivery & totals at checkout
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> 30–40 min
-                  </span>
+                  <div className="mt-3 flex items-center justify-center gap-4 text-[11px] text-[#FFF1D0]/70">
+                    <span className="inline-flex items-center gap-1">
+                      <Truck className="h-3 w-3" /> Totals at checkout
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> 30–40 min
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

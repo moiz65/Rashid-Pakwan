@@ -4,6 +4,10 @@ import { useMenuStore } from "@/store/MenuStore";
 import { useMenuLoading } from "@/hooks/useMenuProducts";
 import { resolveMediaUrl, toDisplayProduct, type DisplayProduct } from "@/lib/api";
 
+/*
+  Minimal desi biryani palette
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
+*/
 export function DrinksMenu() {
   const loadMenu = useMenuStore((s) => s.loadMenu);
   const drinks = useMenuStore((s) => s.drinks);
@@ -38,7 +42,7 @@ export function DrinksMenu() {
   if (loaded && !isLoading && products.length === 0) return null;
 
   return (
-    <div id="drinks" className="scroll-mt-28 md:scroll-mt-[7.25rem]">
+    <div id="drinks" className="scroll-mt-28 md:scroll-mt-[7.25rem] bg-[#FFF8E7]">
       <ProductSection
         title="Drinks"
         eyebrow="Beverages"

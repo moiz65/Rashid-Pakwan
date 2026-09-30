@@ -4,7 +4,7 @@ import { useMenuStore } from "@/store/MenuStore";
 
 /*
   Minimal desi biryani palette
-  brown  #3A0F0A   saffron #F29C1F   cream #FFF1D0
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
 */
 export function Categories({ sticky = false }: { sticky?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -56,12 +56,12 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
   const isAllActive = !activeCategorySlug;
 
   const arrowClass =
-    "absolute z-10 h-7 w-7 rounded-full bg-[#FFF1D0] text-[#3A0F0A] flex items-center justify-center hover:bg-white transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F29C1F]";
+    "absolute z-10 h-7 w-7 rounded-full bg-[#FFF1D0] text-[#840608] border border-[#840608]/15 flex items-center justify-center hover:bg-[#F29C1F] hover:text-[#840608] transition-colors cursor-pointer shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
 
   return (
     <div
-      className={`w-full bg-[#3A0F0A] border-b-0 border-[#F29C1F] ${
-        sticky ? "sticky top-[74px] sm:top-[80px] md:top-[128px] lg:top-[136px] z-40" : ""
+      className={`w-full bg-[#840608] border-b-2 border-[#F29C1F]/60 ${
+        sticky ? "sticky top-[74px] sm:top-[80px] md:top-[115px] lg:top-[115px] z-40" : ""
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative py-2.5 flex items-center">
@@ -120,10 +120,10 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
                     }
                   }, 60);
                 }}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F] ${
+                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F] ${
                   isActive
-                    ? "bg-[#F29C1F] text-[#3A0F0A]"
-                    : "text-[#FFF1D0]/80 hover:text-[#F29C1F]"
+                    ? "bg-[#F29C1F] text-[#840608] border-[#F29C1F]"
+                    : "bg-[#FFF1D0]/10 text-[#FFF1D0]/80 border-[#FFF1D0]/20 hover:bg-[#FFF1D0]/20 hover:text-[#F29C1F]"
                 }`}
               >
                 {category.name}

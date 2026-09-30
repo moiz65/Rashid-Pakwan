@@ -24,7 +24,15 @@ import { useMenuStore } from "@/store/MenuStore";
 import { useCartStore } from "@/store/CartStore";
 import { SectionHeader } from "./HotDeals";
 
+/*
+  Minimal desi biryani palette
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
+*/
 const OFFERS_POLL_MS = 20_000;
+
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
+const primaryBtn = `bg-[#840608] text-[#F29C1F] font-semibold rounded-full hover:bg-[#5A1A10] active:scale-[0.99] transition-colors cursor-pointer ${focusRing}`;
 
 function offerSubtitle(offer: PublicOffer) {
   const desc = offer.description?.trim();
@@ -32,22 +40,22 @@ function offerSubtitle(offer: PublicOffer) {
     return desc;
   }
   if (offer.type === "percentage") {
-    return `${Number(offer.discountValue || 0)}% off eligible items — auto-applied at checkout.`;
+    return `${Number(offer.discountValue || 0)}% off eligible items, applied automatically at checkout.`;
   }
   if (offer.type === "fixed") {
-    return `Rs ${Number(offer.discountValue || 0)} off eligible items — auto-applied at checkout.`;
+    return `Rs ${Number(offer.discountValue || 0)} off eligible items, applied automatically at checkout.`;
   }
   if (offer.type === "bogo") {
-    return `Buy any ${offer.buyQty || 1}, get any ${offer.getQty || 1} free — pick from the offer categories.`;
+    return `Buy any ${offer.buyQty || 1}, get any ${offer.getQty || 1} free. Pick from the offer categories.`;
   }
   if (offer.type === "freebie") return "Free item when your order meets the minimum threshold.";
   if (offer.type === "free_delivery") {
     return `Free delivery on all orders over Rs ${Number(offer.minOrder || 0)}.`;
   }
   if (offer.type === "bundle") {
-    return offer.conditions?.trim() || "Bundle promotion — auto-applied at checkout.";
+    return offer.conditions?.trim() || "Bundle promotion, applied automatically at checkout.";
   }
-  return "Limited-time promotion — available across eligible items.";
+  return "Limited-time promotion on eligible items.";
 }
 
 function getOfferIcon(type?: string) {
@@ -97,39 +105,39 @@ function ProductGridCard({
 
   return (
     <div
-      className={`rounded-2xl border overflow-hidden transition-all ${
+      className={`rounded-2xl border overflow-hidden bg-[#FFF8E7] transition-colors ${
         selected
           ? free
-            ? "border-emerald-500/60 ring-1 ring-emerald-500/30"
-            : "border-primary/60 ring-1 ring-primary/30"
-          : "border-border/70 hover:border-primary/35"
-      } bg-card`}
+            ? "border-[#4E8A45] ring-1 ring-[#4E8A45]/40"
+            : "border-[#840608] ring-1 ring-[#840608]/30"
+          : "border-[#840608]/15 hover:border-[#840608]/40"
+      }`}
     >
-      <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+      <div className="aspect-[4/3] bg-[#FFF1D0] relative overflow-hidden">
         {img ? (
           <img src={img} alt={product.name} className="h-full w-full object-cover" />
         ) : (
-          <div className="h-full w-full grid place-items-center text-muted-foreground text-xs">
+          <div className="h-full w-full grid place-items-center text-[#840608]/50 text-xs">
             No image
           </div>
         )}
         {free ? (
-          <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-500 text-white">
+          <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#4E8A45] text-[#FFF1D0]">
             Free
           </span>
         ) : null}
         {selected ? (
-          <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground grid place-items-center">
+          <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-[#F29C1F] text-[#840608] grid place-items-center">
             <Check className="h-3.5 w-3.5" />
           </span>
         ) : null}
       </div>
       <div className="p-3 space-y-2">
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{product.name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-sm font-semibold truncate text-[#840608]">{product.name}</p>
+          <p className="text-xs text-[#840608]/65 mt-0.5">
             {free ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">Included free</span>
+              <span className="text-[#4E8A45] font-medium">Included free</span>
             ) : (
               <span>Rs {formatAmount(price)}</span>
             )}
@@ -140,17 +148,19 @@ function ProductGridCard({
             type="button"
             disabled={qty <= 0}
             onClick={() => onChange(Math.max(0, qty - 1))}
-            className="h-8 w-8 rounded-full border border-border grid place-items-center disabled:opacity-40 cursor-pointer hover:bg-muted"
+            className={`h-8 w-8 rounded-full border border-[#840608]/30 text-[#840608] grid place-items-center disabled:opacity-40 cursor-pointer hover:bg-[#FFF1D0] ${focusRing}`}
             aria-label={`Decrease ${product.name}`}
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
-          <span className="text-sm font-semibold tabular-nums min-w-[1.5rem] text-center">{qty}</span>
+          <span className="text-sm font-semibold tabular-nums min-w-[1.5rem] text-center text-[#840608]">
+            {qty}
+          </span>
           <button
             type="button"
             disabled={maxReached}
             onClick={() => onChange(qty + 1)}
-            className="h-8 w-8 rounded-full border border-border grid place-items-center disabled:opacity-40 cursor-pointer hover:bg-muted"
+            className={`h-8 w-8 rounded-full border border-[#840608]/30 text-[#840608] grid place-items-center disabled:opacity-40 cursor-pointer hover:bg-[#FFF1D0] ${focusRing}`}
             aria-label={`Increase ${product.name}`}
           >
             <Plus className="h-3.5 w-3.5" />
@@ -297,7 +307,7 @@ function BogoOfferBuilder({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-[#000]/60"
       onClick={onClose}
     >
       <motion.div
@@ -305,38 +315,41 @@ function BogoOfferBuilder({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 40, opacity: 0 }}
         transition={{ type: "spring", damping: 26, stiffness: 280 }}
-        className="relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-card border border-border shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label={offer.title}
+        className="relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-[#FFF] border-t-4 border-[#F29C1F] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 p-5 border-b border-border bg-card/95 backdrop-blur space-y-4">
+        <div className="sticky top-0 z-10 p-5 border-b border-[#840608]/15 bg-[#FFF8E7]/95 backdrop-blur space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/15 text-primary border border-primary/25">
-                {offer.badgeText || `Buy ${buyNeed} Get ${getNeed}`}
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#F29C1F] text-[#840608]">
+                {offer.badgeText || `Buy ${buyNeed} get ${getNeed}`}
               </span>
-              <h3 className="text-xl font-bold mt-2">{offer.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                Browse like a menu category — pick paid items, then free items.
+              <h3 className="text-xl font-bold mt-2 text-[#840608]">{offer.title}</h3>
+              <p className="text-sm text-[#840608]/65 mt-1">
+                Pick your paid items first, then your free items.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="h-9 w-9 rounded-full border border-border grid place-items-center cursor-pointer hover:bg-muted shrink-0"
+              className={`h-9 w-9 rounded-full border border-[#840608]/30 text-[#840608] grid place-items-center cursor-pointer hover:bg-[#FFF1D0] shrink-0 ${focusRing}`}
               aria-label="Close"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex gap-2 p-1 rounded-full bg-surface border border-border">
+          <div className="flex gap-1 p-1 rounded-full bg-[#FFF1D0] border border-[#840608]/15">
             <button
               type="button"
               onClick={() => setTab("buy")}
-              className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+              className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors cursor-pointer ${focusRing} ${
                 tab === "buy"
-                  ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[#840608] text-[#F29C1F]"
+                  : "text-[#840608]/70 hover:text-[#840608]"
               }`}
             >
               Buy any {buyNeed}
@@ -347,10 +360,10 @@ function BogoOfferBuilder({
             <button
               type="button"
               onClick={() => setTab("get")}
-              className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors cursor-pointer ${
+              className={`flex-1 h-10 rounded-full text-sm font-semibold transition-colors cursor-pointer ${focusRing} ${
                 tab === "get"
-                  ? "bg-emerald-600 text-white shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[#4E8A45] text-[#FFF1D0]"
+                  : "text-[#840608]/70 hover:text-[#840608]"
               }`}
             >
               Free any {getNeed}
@@ -362,12 +375,11 @@ function BogoOfferBuilder({
         </div>
 
         <div className="p-5">
-          <p className="text-xs text-muted-foreground mb-3">
+          <p className="text-xs text-[#840608]/65 mb-3">
             {tab === "buy"
-              ? `Select any ${need} item${need > 1 ? "s" : ""} from this category`
-              : `Select any ${need} free item${need > 1 ? "s" : ""} from this category`}
-            {" · "}
-            <span className="font-medium text-foreground">
+              ? `Select any ${need} item${need > 1 ? "s" : ""} from this category.`
+              : `Select any ${need} free item${need > 1 ? "s" : ""} from this category.`}{" "}
+            <span className="font-semibold text-[#840608]">
               {count}/{need} selected
             </span>
           </p>
@@ -386,33 +398,30 @@ function BogoOfferBuilder({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground py-10 text-center">
+            <p className="text-sm text-[#840608]/65 py-10 text-center">
               No products in this offer category yet.
             </p>
           )}
         </div>
 
-        <div className="sticky bottom-0 p-5 border-t border-border bg-card/95 backdrop-blur space-y-3">
+        <div className="sticky bottom-0 p-5 border-t border-[#840608]/15 bg-[#FFF8E7]/95 backdrop-blur space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-            <span className="text-muted-foreground">
-              You pay ~ <span className="font-semibold text-foreground">Rs {formatAmount(paidTotal)}</span>
+            <span className="text-[#840608]/70">
+              You pay about <span className="font-semibold text-[#840608]">Rs {formatAmount(paidTotal)}</span>
               {freeValue > 0 ? (
                 <>
-                  {" "}
-                  · Save ~{" "}
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    Rs {formatAmount(freeValue)}
-                  </span>
+                  , saving about{" "}
+                  <span className="font-semibold text-[#4E8A45]">Rs {formatAmount(freeValue)}</span>
                 </>
               ) : null}
             </span>
-            <span className="text-[11px] text-muted-foreground">Discount applied at checkout</span>
+            <span className="text-xs text-[#840608]/55">Discount applied at checkout</span>
           </div>
           <button
             type="button"
             disabled={!canAdd || added}
             onClick={handleAdd}
-            className="w-full h-12 rounded-full bg-gradient-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 shadow-glow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform"
+            className={`w-full h-12 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${primaryBtn}`}
           >
             {added ? (
               <>
@@ -451,14 +460,13 @@ function BogoOfferCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      whileHover={{ y: -6 }}
-      className="group flex h-full flex-col rounded-3xl bg-card border border-border overflow-hidden hover:border-primary/50 transition-colors shadow-sm"
+      transition={{ duration: 0.3, delay: index * 0.04 }}
+      className="group flex h-full flex-col rounded-3xl bg-[#FFF8E7] border border-[#840608]/15 overflow-hidden hover:border-[#840608]/50 transition-colors"
     >
-      <div className="relative aspect-[4/3] grid place-items-center bg-gradient-to-br from-surface to-card overflow-hidden">
+      <div className="relative aspect-[4/3] grid place-items-center bg-[#FFF1D0] overflow-hidden">
         {heroImg ? (
           <img
             src={heroImg}
@@ -466,10 +474,10 @@ function BogoOfferCard({
             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <Gift className="h-12 w-12 text-muted-foreground/40" />
+          <Gift className="h-12 w-12 text-[#840608]/30" />
         )}
-        <span className="absolute top-3 left-3 text-[10px] font-bold tracking-wide uppercase px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-glow">
-          {offer.badgeText || `Buy ${buyNeed} Get ${getNeed}`}
+        <span className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-[#F29C1F] text-[#840608]">
+          {offer.badgeText || `Buy ${buyNeed} get ${getNeed}`}
         </span>
         {preview.length > 1 ? (
           <div className="absolute bottom-3 left-3 flex -space-x-2">
@@ -478,7 +486,7 @@ function BogoOfferCard({
               return (
                 <div
                   key={p.id}
-                  className="h-9 w-9 rounded-full border-2 border-card overflow-hidden bg-muted"
+                  className="h-9 w-9 rounded-full border-2 border-[#FFF8E7] overflow-hidden bg-[#FFF1D0]"
                   title={p.name}
                 >
                   {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : null}
@@ -491,26 +499,26 @@ function BogoOfferCard({
 
       <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
         <div className="min-w-0">
-          <h3 className="font-bold text-base leading-snug line-clamp-2">{offer.title}</h3>
-          <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
+          <h3 className="font-bold text-base leading-snug line-clamp-2 text-[#840608]">{offer.title}</h3>
+          <p className="text-xs text-[#840608]/65 mt-1.5 line-clamp-2 leading-relaxed">
             {offer.description?.trim() ||
-              `Any ${buyNeed} from paid list · Any ${getNeed} free from free list`}
+              `Any ${buyNeed} from the paid list, any ${getNeed} free from the free list.`}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <span className="text-[11px] px-2.5 py-1 rounded-full bg-surface border border-border text-muted-foreground">
-            Buy · {buyProducts.length}
+          <span className="text-xs px-2.5 py-1 rounded-full bg-[#FFF1D0] border border-[#840608]/15 text-[#840608]/75">
+            {buyProducts.length} to buy
           </span>
-          <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-400">
-            Free · {getProducts.length}
+          <span className="text-xs px-2.5 py-1 rounded-full bg-[#4E8A45]/10 border border-[#4E8A45]/30 text-[#3E7038]">
+            {getProducts.length} free
           </span>
         </div>
 
         <button
           type="button"
           onClick={onOpen}
-          className="mt-auto inline-flex items-center justify-center gap-2 h-11 w-full rounded-full bg-gradient-primary text-primary-foreground text-sm font-semibold shadow-glow cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-transform"
+          className={`mt-auto inline-flex items-center justify-center gap-2 h-11 w-full text-sm ${primaryBtn}`}
         >
           Choose items
           <ArrowRight className="h-4 w-4" />
@@ -533,46 +541,41 @@ function SimpleOfferCard({
   const badge =
     offer.badgeText ||
     (offer.type === "free_delivery"
-      ? "Free Delivery"
+      ? "Free delivery"
       : offer.type === "percentage"
-        ? `${offer.discountValue}% OFF`
-        : "Special Offer");
+        ? `${offer.discountValue}% off`
+        : "Special offer");
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      whileHover={{ y: -4 }}
-      className="group relative rounded-3xl bg-card border border-border/80 p-6 flex flex-col justify-between hover:border-primary/60 transition-all duration-300 shadow-sm hover:shadow-glow"
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      className="group relative rounded-3xl bg-[#FFF8E7] border border-[#840608]/15 p-6 flex flex-col justify-between hover:border-[#840608]/50 transition-colors"
     >
       <div>
         <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="grid place-items-center h-11 w-11 rounded-2xl bg-primary/15 text-primary border border-primary/20 group-hover:bg-gradient-primary group-hover:text-primary-foreground transition-all duration-300">
+          <div className="grid place-items-center h-11 w-11 rounded-2xl bg-[#FFF1D0] text-[#840608] border border-[#F29C1F]/60 group-hover:bg-[#F29C1F] transition-colors">
             <Icon className="h-5 w-5" />
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#F29C1F] text-[#840608]">
             {badge}
           </span>
         </div>
-        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-          {offer.title}
-        </h3>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed">
+        <h3 className="text-lg font-bold text-[#840608]">{offer.title}</h3>
+        <p className="text-xs sm:text-sm text-[#840608]/65 mt-2 leading-relaxed">
           {offerSubtitle(offer)}
         </p>
       </div>
-      <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between">
-        <span className="text-[11px] font-medium text-muted-foreground/80 uppercase tracking-wide">
-          Auto-applied at checkout
-        </span>
+      <div className="mt-6 pt-4 border-t border-dashed border-[#840608]/25 flex items-center justify-between">
+        <span className="text-xs text-[#840608]/55">Applied at checkout</span>
         <a
           href="#menu-products"
           onClick={() => onSelectOffer?.(offer)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-glow transition-colors"
+          className={`inline-flex items-center gap-1.5 text-sm font-semibold text-[#B93A0E] hover:text-[#840608] transition-colors rounded-sm ${focusRing}`}
         >
-          View Menu
+          View menu
           <ArrowRight className="h-3.5 w-3.5" />
         </a>
       </div>
@@ -632,13 +635,13 @@ export function OffersMenu({ onSelectOffer }: { onSelectOffer?: (offer: PublicOf
   return (
     <section
       id="offers"
-      className="py-10 lg:py-16 scroll-mt-28 md:scroll-mt-[7.25rem] bg-surface/30 border-y border-border/40"
+      className="py-10 lg:py-16 scroll-mt-28 md:scroll-mt-[7.25rem] bg-[#FFF1D0] border-y border-[#840608]/10"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          eyebrow="Special Promotions"
-          title="Active Offers & Discounts"
-          subtitle="Browse offer categories like the menu — pick any paid items, then any free items."
+          eyebrow="Special promotions"
+          title="Active offers and discounts"
+          subtitle="Pick any paid items, then any free items."
         />
 
         {loading ? (
@@ -646,7 +649,7 @@ export function OffersMenu({ onSelectOffer }: { onSelectOffer?: (offer: PublicOf
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-72 rounded-3xl bg-muted/30 animate-pulse border border-border"
+                className="h-72 rounded-3xl bg-[#FFF8E7] animate-pulse border border-[#840608]/10"
               />
             ))}
           </div>

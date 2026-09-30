@@ -11,6 +11,11 @@ import { Footer } from "@/components/landing/Footer";
 import { CatalogLiveSync } from "@/components/landing/CatalogLiveSync";
 import { useLandingScrollRestoration } from "@/hooks/useLandingScrollRestoration";
 
+/*
+  Minimal desi biryani palette
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
+*/
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -28,7 +33,7 @@ function Landing() {
   useLandingScrollRestoration();
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col">
+    <main className="relative min-h-screen bg-[#FFF8E7] text-[#840608] flex flex-col">
       <CatalogLiveSync />
       <Navbar />
       <Hero />

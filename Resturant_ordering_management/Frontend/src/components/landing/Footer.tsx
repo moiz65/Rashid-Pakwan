@@ -29,8 +29,8 @@ export function Footer() {
     "hover:text-[#F29C1F] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F] rounded-sm";
 
   return (
-    <footer className="bg-[#3A0F0A] text-[#FFF1D0] border-t-2 border-[#F29C1F]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <footer className="bg-[#840608] text-[#FFF1D0] border-t-2 border-[#F29C1F]">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p className="font-display font-bold text-lg text-[#F29C1F]">{brand}</p>
           <p className="text-sm text-[#FFF1D0]/70 mt-1">Fresh biryani, delivered fast.</p>
@@ -53,7 +53,7 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-[#FFF1D0]/15">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 text-xs text-[#FFF1D0]/60">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 py-4 text-xs text-[#FFF1D0]/60">
           © {new Date().getFullYear()} {brand}. All rights reserved.
         </div>
       </div>

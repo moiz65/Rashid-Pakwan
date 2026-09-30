@@ -1,13 +1,13 @@
 // src/components/landing/Checkout.tsx
 import { motion } from "motion/react";
 import { 
-  CreditCard, Truck, MapPin, ChevronRight, 
-  CheckCircle, AlertCircle, ArrowLeft, 
-  Clock, Store, Phone, User, Mail, Home, 
-  Map, FileText, Users, Building, Image as ImageIcon
+  CreditCard, Truck, ChevronRight, 
+  CheckCircle, ArrowLeft, 
+  Store, Phone, User, Mail, Home, 
+  Map, FileText, Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import logo from "@/assets/main_logo.png";
 import {
   fetchPublicPaymentGateways,
@@ -24,6 +24,13 @@ import {
 } from "@/lib/api";
 import { getStoredDeliveryLocation } from "@/lib/branchSelection";
 import { formatAmount } from "@/lib/formatters";
+
+/*
+  Minimal desi biryani palette
+  brown  #840608   saffron #F29C1F   cream #FFF1D0 / #FFF8E7   chilli #B93A0E   green #4E8A45
+*/
+const focusRing =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
 
 type CartItem = {
   id: string;
@@ -114,8 +121,7 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
   const [couponMsg, setCouponMsg] = useState("");
   const [couponBusy, setCouponBusy] = useState(false);
   const [coversFullSubtotal, setCoversFullSubtotal] = useState(false);
-  
-  // Customer Details
+
   const [title, setTitle] = useState("Mr.");
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -261,7 +267,6 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
     };
   }, [items, appliedCoupon, deliveryType, shippingMethodId, deliveryAreaId]);
 
-  // Persist essential checkout details for abandoned-cart recovery
   useEffect(() => {
     const name = fullName.trim();
     const email = emailAddress.trim();
@@ -299,26 +304,14 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
           paymentMethod: paymentMethod || null,
           couponCode: appliedCoupon || null,
         },
-      }).catch(() => {
-        /* best-effort */
-      });
+      }).catch(() => {});
     }, 800);
 
     return () => window.clearTimeout(timer);
   }, [
-    items,
-    title,
-    fullName,
-    emailAddress,
-    mobileNumber,
-    alternateMobile,
-    deliveryAddress,
-    nearestLandmark,
-    deliveryType,
-    branchId,
-    deliveryInstructions,
-    paymentMethod,
-    appliedCoupon,
+    items, title, fullName, emailAddress, mobileNumber, alternateMobile,
+    deliveryAddress, nearestLandmark, deliveryType, branchId,
+    deliveryInstructions, paymentMethod, appliedCoupon,
   ]);
 
   const selectPayment = (gw: PublicPaymentGateway) => {
@@ -330,8 +323,7 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
   const subtotal = cartSubtotal;
   const deliveryFee = deliveryType === "pickup" ? 0 : shippingFee;
   const tax = taxExclusive;
-  const quotedPriceAdjustment =
-    quotedSubtotal != null ? cartSubtotal - quotedSubtotal : 0;
+  const quotedPriceAdjustment = quotedSubtotal != null ? cartSubtotal - quotedSubtotal : 0;
   const total =
     quotedTotal != null
       ? Math.max(0, quotedTotal + quotedPriceAdjustment)
@@ -376,78 +368,75 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
 
   const handleConfirm = async () => {
     await onConfirm({
-      title,
-      fullName,
-      mobileNumber,
-      alternateMobile,
-      deliveryAddress,
-      nearestLandmark,
-      emailAddress,
-      deliveryInstructions,
-      deliveryType,
+      title, fullName, mobileNumber, alternateMobile, deliveryAddress,
+      nearestLandmark, emailAddress, deliveryInstructions, deliveryType,
       branch: selectedBranch?.name,
       branchId: branchId || undefined,
       shippingMethodId: deliveryType === "delivery" ? shippingMethodId : undefined,
       deliveryAreaId: deliveryType === "delivery" ? deliveryAreaId || undefined : undefined,
       deliveryAreaName: deliveryType === "delivery" ? deliveryAreaName || undefined : undefined,
-      paymentMethod,
-      items,
-      total,
+      paymentMethod, items, total,
       couponCode: appliedCoupon || undefined,
     });
   };
 
-  const handleBack = () => {
-    navigate({ to: "/" });
-  };
+  const handleBack = () => navigate({ to: "/" });
 
-  const isStep1Valid = () => {
-    return fullName.trim() !== "" && 
-           mobileNumber.trim() !== "" && 
-           deliveryAddress.trim() !== "" && 
-           emailAddress.trim() !== "" &&
-           (deliveryType === "pickup" ? branchId !== "" : true);
-  };
+  const isStep1Valid = () =>
+    fullName.trim() !== "" &&
+    mobileNumber.trim() !== "" &&
+    deliveryAddress.trim() !== "" &&
+    emailAddress.trim() !== "" &&
+    (deliveryType === "pickup" ? branchId !== "" : true);
+
+  // Shared field styles — flat, calm, consistent
+  const fieldClass =
+    "w-full px-3.5 py-3 rounded-lg border border-[#840608]/20 bg-white text-[#840608] placeholder:text-[#840608]/40 focus:outline-none focus:border-[#840608] focus:ring-1 focus:ring-[#840608]/10 transition-colors text-sm";
+  const fieldWithIconClass = `${fieldClass} pl-10`;
+  const labelClass = "text-sm font-semibold block mb-1.5 text-[#840608]";
+  const cardClass = "rounded-2xl bg-white border border-[#840608]/15 p-6 sm:p-7";
 
   return (
-    <div className="min-h-screen bg-surface/30 pt-10 pb-16">
+    <div className="min-h-screen bg-[#FFF8E7] pt-8 pb-16">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        {/* Header with Logo */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={handleBack}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className={`inline-flex items-center gap-2 text-sm text-[#840608]/70 hover:text-[#840608] transition-colors cursor-pointer rounded-md px-2 py-1 ${focusRing}`}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Menu
           </button>
-          
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Studio 7teas" className="h-12 w-12 rounded-full object-contain bg-white p-1" />
-          </div>
-          
-          <div className="w-20" />
+
+          <img
+            src={logo}
+            alt="Studio 7teas"
+            className="h-11 w-11 rounded-full object-contain bg-[#FFF1D0] p-1 border border-[#840608]/10"
+          />
+
+          <div className="w-24" />
         </div>
 
-        {/* Steps Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        {/* Steps */}
+        <div className="flex items-center justify-center mb-8">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
               <div
-                className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-semibold border transition-colors ${
                   s === step
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                    ? "bg-[#840608] text-[#F29C1F] border-[#840608]"
                     : s < step
-                    ? "bg-primary/20 text-primary"
-                    : "bg-surface text-muted-foreground"
+                    ? "bg-[#F29C1F] text-[#840608] border-[#F29C1F]"
+                    : "bg-white text-[#840608]/40 border-[#840608]/15"
                 }`}
               >
-                {s < step ? <CheckCircle className="h-5 w-5" /> : s}
+                {s < step ? <CheckCircle className="h-4 w-4" /> : s}
               </div>
               {s < 3 && (
                 <div
-                  className={`h-0.5 w-12 transition-colors ${
-                    s < step ? "bg-primary" : "bg-border"
+                  className={`h-px w-14 sm:w-20 transition-colors ${
+                    s < step ? "bg-[#840608]" : "bg-[#840608]/15"
                   }`}
                 />
               )}
@@ -455,30 +444,29 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Step 1: Customer Details */}
             {step === 1 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-3xl border border-border p-6 shadow-elegant"
+                className={cardClass}
               >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-semibold mb-5 flex items-center gap-2 text-[#840608]">
+                  <Users className="h-4 w-4" />
                   Customer Details
                 </h3>
-                
+
                 <div className="space-y-4">
-                  {/* Title and Full Name */}
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="text-sm font-semibold block mb-2">Title</label>
+                      <label className={labelClass}>Title</label>
                       <select
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                        className={fieldClass}
                       >
                         <option value="Mr.">Mr.</option>
                         <option value="Ms.">Miss.</option>
@@ -486,136 +474,134 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                       </select>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-sm font-semibold block mb-2">Full Name *</label>
+                      <label className={labelClass}>Full Name *</label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                         <input
                           type="text"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="Enter your full name"
-                          className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                          className={fieldWithIconClass}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Mobile Numbers */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-sm font-semibold block mb-2">Mobile Number *</label>
+                      <label className={labelClass}>Mobile Number *</label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                         <input
                           type="tel"
                           value={mobileNumber}
                           onChange={(e) => setMobileNumber(e.target.value)}
                           placeholder="03XX-XXXXXXX"
-                          className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                          className={fieldWithIconClass}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold block mb-2">Alternate Mobile</label>
+                      <label className={labelClass}>Alternate Mobile</label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                         <input
                           type="tel"
                           value={alternateMobile}
                           onChange={(e) => setAlternateMobile(e.target.value)}
                           placeholder="03XX-XXXXXXX"
-                          className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                          className={fieldWithIconClass}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Email */}
                   <div>
-                    <label className="text-sm font-semibold block mb-2">Email Address *</label>
+                    <label className={labelClass}>Email Address *</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                       <input
                         type="email"
                         value={emailAddress}
                         onChange={(e) => setEmailAddress(e.target.value)}
                         placeholder="your@email.com"
-                        className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                        className={fieldWithIconClass}
                       />
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
                   <div>
-                    <label className="text-sm font-semibold block mb-2">Delivery Address *</label>
+                    <label className={labelClass}>Delivery Address *</label>
                     <div className="relative">
-                      <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Home className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                       <input
                         type="text"
                         value={deliveryAddress}
                         onChange={(e) => setDeliveryAddress(e.target.value)}
                         placeholder="House #, Street, Area"
-                        className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                        className={fieldWithIconClass}
                       />
                     </div>
                   </div>
 
-                  {/* Nearest Landmark */}
                   <div>
-                    <label className="text-sm font-semibold block mb-2">Nearest Landmark</label>
+                    <label className={labelClass}>Nearest Landmark</label>
                     <div className="relative">
-                      <Map className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Map className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#840608]/40" />
                       <input
                         type="text"
                         value={nearestLandmark}
                         onChange={(e) => setNearestLandmark(e.target.value)}
                         placeholder="Nearby mosque, school, or market"
-                        className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                        className={fieldWithIconClass}
                       />
                     </div>
                   </div>
 
-                  {/* Delivery Type */}
                   <div>
-                    <label className="text-sm font-semibold block mb-2">Delivery Type *</label>
+                    <label className={labelClass}>Delivery Type *</label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => setDeliveryType("delivery")}
-                        className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors cursor-pointer ${focusRing} ${
                           deliveryType === "delivery"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            ? "border-[#840608] bg-[#FFF1D0]"
+                            : "border-[#840608]/20 bg-white hover:border-[#840608]/40"
                         }`}
                       >
-                        <Truck className={`h-4 w-4 ${deliveryType === "delivery" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className="font-medium text-sm">Delivery</span>
+                        <Truck className={`h-4 w-4 ${deliveryType === "delivery" ? "text-[#840608]" : "text-[#840608]/50"}`} />
+                        <span className={`text-sm font-medium ${deliveryType === "delivery" ? "text-[#840608]" : "text-[#840608]/60"}`}>
+                          Delivery
+                        </span>
                       </button>
                       <button
                         onClick={() => setDeliveryType("pickup")}
-                        className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors cursor-pointer ${focusRing} ${
                           deliveryType === "pickup"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            ? "border-[#840608] bg-[#FFF1D0]"
+                            : "border-[#840608]/20 bg-white hover:border-[#840608]/40"
                         }`}
                       >
-                        <Store className={`h-4 w-4 ${deliveryType === "pickup" ? "text-primary" : "text-muted-foreground"}`} />
-                        <span className="font-medium text-sm">Pickup</span>
+                        <Store className={`h-4 w-4 ${deliveryType === "pickup" ? "text-[#840608]" : "text-[#840608]/50"}`} />
+                        <span className={`text-sm font-medium ${deliveryType === "pickup" ? "text-[#840608]" : "text-[#840608]/60"}`}>
+                          Pickup
+                        </span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Branch Selection (if pickup) */}
                   {deliveryType === "pickup" && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       className="overflow-hidden"
                     >
-                      <label className="text-sm font-semibold block mb-2">Select Branch *</label>
+                      <label className={labelClass}>Select Branch *</label>
                       <select
                         value={branchId}
                         onChange={(e) => setBranchId(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm"
+                        className={fieldClass}
                       >
                         <option value="">Select a branch</option>
                         {branches.map((b) => (
@@ -627,55 +613,54 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                     </motion.div>
                   )}
 
-                  {/* Delivery Instructions */}
                   <div>
-                    <label className="text-sm font-semibold block mb-2">Delivery Instructions</label>
-                    <div className="relative">
-                      <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <textarea
-                        value={deliveryInstructions}
-                        onChange={(e) => setDeliveryInstructions(e.target.value)}
-                        placeholder="Any special delivery instructions..."
-                        className="w-full pl-9 pr-4 py-3 rounded-xl border border-border bg-surface focus:outline-none focus:border-primary transition-colors text-sm resize-none"
-                        rows={2}
-                      />
-                    </div>
+                    <label className={labelClass}>Delivery Instructions</label>
+                    <textarea
+                      value={deliveryInstructions}
+                      onChange={(e) => setDeliveryInstructions(e.target.value)}
+                      placeholder="Any special delivery instructions..."
+                      className={`${fieldClass} resize-none`}
+                      rows={2}
+                    />
                   </div>
                 </div>
 
                 <button
                   onClick={() => setStep(2)}
                   disabled={!isStep1Valid()}
-                  className="mt-6 w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-gradient-primary text-primary-foreground font-medium shadow-glow hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`mt-6 w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-[#840608] text-[#F29C1F] text-sm font-semibold hover:bg-[#5A1A10] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}
                 >
-                  Next Step
+                  Continue to Payment
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </motion.div>
             )}
 
-            {/* Step 2: Payment Method */}
+            {/* Step 2: Payment */}
             {step === 2 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-3xl border border-border p-6 shadow-elegant"
+                className={cardClass}
               >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-semibold mb-5 flex items-center gap-2 text-[#840608]">
+                  <CreditCard className="h-4 w-4" />
                   Payment Method
                 </h3>
-                
-                <div className="space-y-3">
+
+                <div className="space-y-2.5">
                   {paymentLoading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       {[0, 1, 2].map((i) => (
-                        <div key={i} className="h-16 rounded-xl border bg-muted/40 animate-pulse" />
+                        <div
+                          key={i}
+                          className="h-16 rounded-lg border border-[#840608]/10 bg-[#FFF8E7] animate-pulse"
+                        />
                       ))}
                     </div>
                   ) : paymentGateways.length === 0 ? (
-                    <p className="text-sm text-muted-foreground rounded-xl border border-dashed p-4">
-                      No payment methods are available right now. Please enable at least one in the admin panel (Settings → Payment Gateways).
+                    <p className="text-sm text-[#840608]/70 rounded-lg border border-dashed border-[#840608]/25 p-4">
+                      No payment methods are available right now. Please enable at least one in the admin panel.
                     </p>
                   ) : (
                     paymentGateways.map((gw) => (
@@ -683,10 +668,10 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                         key={gw.id}
                         type="button"
                         onClick={() => selectPayment(gw)}
-                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`w-full flex items-center justify-between p-4 rounded-lg border transition-colors cursor-pointer ${focusRing} ${
                           paymentMethodId === gw.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            ? "border-[#840608] bg-[#FFF1D0]"
+                            : "border-[#840608]/20 bg-white hover:border-[#840608]/40"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -694,14 +679,14 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                             {gw.icon || "💳"}
                           </span>
                           <div className="text-left">
-                            <p className="text-sm font-medium">{gw.name}</p>
+                            <p className="text-sm font-medium text-[#840608]">{gw.name}</p>
                             {gw.description ? (
-                              <p className="text-xs text-muted-foreground">{gw.description}</p>
+                              <p className="text-xs text-[#840608]/60">{gw.description}</p>
                             ) : null}
                           </div>
                         </div>
                         {paymentMethodId === gw.id && (
-                          <CheckCircle className="h-5 w-5 text-primary" />
+                          <CheckCircle className="h-5 w-5 text-[#840608]" />
                         )}
                       </button>
                     ))
@@ -711,14 +696,14 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={() => setStep(1)}
-                    className="flex-1 inline-flex items-center justify-center h-12 px-6 rounded-full border border-border bg-surface hover:bg-card transition-colors cursor-pointer"
+                    className={`flex-1 inline-flex items-center justify-center h-12 px-6 rounded-lg border border-[#840608]/20 bg-white text-[#840608] text-sm font-semibold hover:bg-[#FFF8E7] transition-colors cursor-pointer ${focusRing}`}
                   >
                     Back
                   </button>
                   <button
                     onClick={() => setStep(3)}
                     disabled={!paymentMethodId || paymentGateways.length === 0}
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-gradient-primary text-primary-foreground font-medium shadow-glow hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className={`flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-[#840608] text-[#F29C1F] text-sm font-semibold hover:bg-[#5A1A10] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}
                   >
                     Review Order
                     <ChevronRight className="h-4 w-4" />
@@ -727,81 +712,79 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
               </motion.div>
             )}
 
-            {/* Step 3: Review & Confirm */}
+            {/* Step 3: Review */}
             {step === 3 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-3xl border border-border p-6 shadow-elegant"
+                className={cardClass}
               >
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-semibold mb-5 flex items-center gap-2 text-[#840608]">
+                  <CheckCircle className="h-4 w-4" />
                   Review Order
                 </h3>
-                
+
                 <div className="space-y-4">
-                  {/* Customer Info */}
-                  <div className="p-4 rounded-xl bg-surface/50 space-y-2">
+                  <div className="p-4 rounded-lg bg-[#FFF8E7] border border-[#840608]/10 space-y-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">{title} {fullName}</span>
+                      <User className="h-4 w-4 text-[#840608]/60" />
+                      <span className="text-sm font-medium text-[#840608]">{title} {fullName}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{mobileNumber}</span>
+                      <Phone className="h-4 w-4 text-[#840608]/60" />
+                      <span className="text-sm text-[#840608]">{mobileNumber}</span>
                       {alternateMobile && (
-                        <span className="text-sm text-muted-foreground">(Alt: {alternateMobile})</span>
+                        <span className="text-sm text-[#840608]/55">(Alt: {alternateMobile})</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-primary" />
-                      <span className="text-sm">{emailAddress}</span>
+                      <Mail className="h-4 w-4 text-[#840608]/60" />
+                      <span className="text-sm text-[#840608]">{emailAddress}</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Home className="h-4 w-4 text-primary mt-0.5" />
-                      <span className="text-sm">{deliveryAddress}</span>
+                      <Home className="h-4 w-4 text-[#840608]/60 mt-0.5" />
+                      <span className="text-sm text-[#840608]">{deliveryAddress}</span>
                     </div>
                     {nearestLandmark && (
                       <div className="flex items-start gap-2">
-                        <Map className="h-4 w-4 text-primary mt-0.5" />
-                        <span className="text-sm">Near: {nearestLandmark}</span>
+                        <Map className="h-4 w-4 text-[#840608]/60 mt-0.5" />
+                        <span className="text-sm text-[#840608]">Near: {nearestLandmark}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Delivery Info */}
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-surface/50">
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-[#FFF8E7] border border-[#840608]/10">
                     {deliveryType === "delivery" ? (
-                      <Truck className="h-5 w-5 text-primary mt-0.5" />
+                      <Truck className="h-4 w-4 text-[#840608]/60 mt-0.5" />
                     ) : (
-                      <Store className="h-5 w-5 text-primary mt-0.5" />
+                      <Store className="h-4 w-4 text-[#840608]/60 mt-0.5" />
                     )}
                     <div>
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium text-[#840608]">
                         {deliveryType === "delivery" ? "Delivery" : "Pickup"}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {deliveryType === "delivery" ? "Home Delivery" : `Branch: ${selectedBranch?.name || "—"}`}
+                      <p className="text-sm text-[#840608]/60">
+                        {deliveryType === "delivery"
+                          ? "Home Delivery"
+                          : `Branch: ${selectedBranch?.name || "—"}`}
                       </p>
                     </div>
                   </div>
 
-                  {/* Payment Method */}
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-surface/50">
-                    <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-[#FFF8E7] border border-[#840608]/10">
+                    <CreditCard className="h-4 w-4 text-[#840608]/60 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Payment Method</p>
-                      <p className="text-sm text-muted-foreground">{paymentMethod || "—"}</p>
+                      <p className="text-sm font-medium text-[#840608]">Payment Method</p>
+                      <p className="text-sm text-[#840608]/60">{paymentMethod || "—"}</p>
                     </div>
                   </div>
 
-                  {/* Items Summary with Images */}
-                  <div className="p-4 rounded-xl bg-surface/50">
-                    <p className="text-sm font-medium mb-3">Order Items</p>
+                  <div className="p-4 rounded-lg bg-[#FFF8E7] border border-[#840608]/10">
+                    <p className="text-sm font-medium mb-3 text-[#840608]">Order Items</p>
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-card border border-border/50">
-                          <div className="h-16 w-16 rounded-lg overflow-hidden bg-gradient-to-br from-surface to-card shrink-0">
+                        <div key={item.id} className="flex items-center gap-3">
+                          <div className="h-14 w-14 rounded-lg overflow-hidden bg-[#FFF1D0] shrink-0 border border-[#840608]/10">
                             <img
                               src={item.src}
                               alt={item.name}
@@ -809,23 +792,23 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{item.name}</p>
+                            <p className="text-sm font-medium truncate text-[#840608]">{item.name}</p>
                             {item.includedItems && item.includedItems.length > 0 && (
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-xs text-[#840608]/60 truncate">
                                 Includes: {item.includedItems.join(", ")}
                               </p>
                             )}
                             {item.addons && item.addons.length > 0 && (
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-xs text-[#840608]/60 truncate">
                                 {item.includedItems?.length ? "Extras" : "+"} {item.addons.join(", ")}
                               </p>
                             )}
                             {item.specialInstructions ? (
-                              <p className="text-xs text-muted-foreground truncate">{item.specialInstructions}</p>
+                              <p className="text-xs text-[#840608]/60 truncate">{item.specialInstructions}</p>
                             ) : null}
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground">×{item.quantity}</span>
-                              <span className="text-sm font-bold">
+                              <span className="text-xs text-[#840608]/55">×{item.quantity}</span>
+                              <span className="text-sm font-semibold text-[#840608]">
                                 {item.currency}{formatAmount(item.price * item.quantity)}
                               </span>
                             </div>
@@ -840,38 +823,44 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                   <button
                     onClick={() => setStep(2)}
                     disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center h-12 px-6 rounded-full border border-border bg-surface hover:bg-card transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`flex-1 inline-flex items-center justify-center h-12 px-6 rounded-lg border border-[#840608]/20 bg-white text-[#840608] text-sm font-semibold hover:bg-[#FFF8E7] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}
                   >
                     Back
                   </button>
                   <button
                     onClick={handleConfirm}
                     disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-gradient-primary text-primary-foreground font-medium shadow-glow hover:scale-[1.02] transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className={`flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-[#840608] text-[#F29C1F] text-sm font-semibold hover:bg-[#5A1A10] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${focusRing}`}
                   >
                     <CheckCircle className="h-4 w-4" />
                     {isSubmitting ? "Placing Order..." : "Confirm Order"}
                   </button>
                 </div>
                 {submitError && (
-                  <p className="mt-3 text-sm text-destructive text-center">{submitError}</p>
+                  <p className="mt-3 text-sm text-[#B93A0E] text-center font-medium">{submitError}</p>
                 )}
               </motion.div>
             )}
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1 mt-8 lg:mt-0">
-            <div className="sticky top-24 lg:top-28 rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-elegant">
-              <div className="flex items-center gap-3 mb-5">
-                <img src={logo} alt="Studio 7teas" className="h-10 w-10 rounded-full object-contain bg-white p-1" />
+          <div className="lg:col-span-1 mt-6 lg:mt-0">
+            <div className="sticky top-24 lg:top-28 rounded-2xl bg-white border border-[#840608]/15 p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-5 pb-5 border-b border-[#840608]/10">
+                <img
+                  src={logo}
+                  alt="Studio 7teas"
+                  className="h-10 w-10 rounded-full object-contain bg-[#FFF1D0] p-1 border border-[#840608]/10"
+                />
                 <div>
-                  <h3 className="text-lg font-semibold leading-tight">Order Summary</h3>
-                  <p className="text-xs text-muted-foreground">{items.length} item{items.length === 1 ? "" : "s"}</p>
+                  <h3 className="text-base font-semibold leading-tight text-[#840608]">Order Summary</h3>
+                  <p className="text-xs text-[#840608]/60">
+                    {items.length} item{items.length === 1 ? "" : "s"}
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-2 mb-4 pr-1">
+              <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                 {items.map((item) => {
                   const addonUnitTotal = (item.selectedAddons || []).reduce(
                     (sum, addon) => sum + addon.price * (addon.quantity || 1),
@@ -883,96 +872,94 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
 
                   return (
                     <div key={item.id} className="text-sm">
-                    <div className="flex justify-between gap-2">
-                      <span className="text-muted-foreground truncate">
-                        {item.quantity}× {item.name}
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        {item.currency}
-                        {formatAmount(item.price * item.quantity)}
-                      </span>
-                    </div>
-                    {!item.offerBundle ? (
-                      <>
-                          <div className="flex justify-between gap-2 pl-3 text-[11px] text-muted-foreground">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-[#840608]/70 truncate">
+                          {item.quantity}× {item.name}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-[#840608]">
+                          {item.currency}{formatAmount(item.price * item.quantity)}
+                        </span>
+                      </div>
+                      {!item.offerBundle ? (
+                        <>
+                          <div className="flex justify-between gap-2 pl-3 text-[11px] text-[#840608]/55">
                             <span>{item.productLabel || item.name}</span>
                             <span className="shrink-0 tabular-nums">
-                              {item.currency}
-                              {formatAmount(productPrice * item.quantity)}
+                              {item.currency}{formatAmount(productPrice * item.quantity)}
                             </span>
                           </div>
                           {item.selectedDrink ? (
-                            <div className="flex justify-between gap-2 pl-3 text-[11px] text-muted-foreground">
+                            <div className="flex justify-between gap-2 pl-3 text-[11px] text-[#840608]/55">
                               <span>
                                 {item.selectedDrink.name}
                                 {item.quantity > 1 ? ` × ${item.quantity}` : ""}
                               </span>
                               <span className="shrink-0 tabular-nums">
-                                {item.currency}
-                                {formatAmount(item.selectedDrink.price * item.quantity)}
+                                {item.currency}{formatAmount(item.selectedDrink.price * item.quantity)}
                               </span>
                             </div>
                           ) : null}
-                      </>
-                    ) : null}
-                    {item.includedItems?.length ? (
-                      <p className="text-[11px] text-muted-foreground truncate pl-3">
-                        Includes: {item.includedItems.join(", ")}
-                      </p>
-                    ) : null}
-                    {item.selectedAddons?.length ? (
-                      <div className="mt-0.5 space-y-0.5 pl-3">
-                        {item.selectedAddons.map((addon) => (
-                          <div
-                            key={addon.id}
-                            className="flex justify-between gap-2 text-[11px] text-muted-foreground"
-                          >
-                            <span>
-                              {addon.name}
-                              {(addon.quantity || 1) * item.quantity > 1
-                                ? ` × ${(addon.quantity || 1) * item.quantity}`
-                                : ""}
-                            </span>
-                            <span className="shrink-0 tabular-nums">
-                              {item.currency}
-                              {formatAmount(
-                                addon.price * (addon.quantity || 1) * item.quantity,
-                              )}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : item.addons?.length ? (
-                      <p className="text-[11px] text-muted-foreground pl-3">
-                        Extras: {item.addons.join(", ")}
-                      </p>
-                    ) : null}
+                        </>
+                      ) : null}
+                      {item.includedItems?.length ? (
+                        <p className="text-[11px] text-[#840608]/55 truncate pl-3">
+                          Includes: {item.includedItems.join(", ")}
+                        </p>
+                      ) : null}
+                      {item.selectedAddons?.length ? (
+                        <div className="mt-0.5 space-y-0.5 pl-3">
+                          {item.selectedAddons.map((addon) => (
+                            <div
+                              key={addon.id}
+                              className="flex justify-between gap-2 text-[11px] text-[#840608]/55"
+                            >
+                              <span>
+                                {addon.name}
+                                {(addon.quantity || 1) * item.quantity > 1
+                                  ? ` × ${(addon.quantity || 1) * item.quantity}`
+                                  : ""}
+                              </span>
+                              <span className="shrink-0 tabular-nums">
+                                {item.currency}
+                                {formatAmount(addon.price * (addon.quantity || 1) * item.quantity)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : item.addons?.length ? (
+                        <p className="text-[11px] text-[#840608]/55 pl-3">
+                          Extras: {item.addons.join(", ")}
+                        </p>
+                      ) : null}
                     </div>
                   );
                 })}
               </div>
-              
-              <div className="space-y-3 text-sm border-t border-border pt-4">
+
+              <div className="space-y-3 text-sm border-t border-[#840608]/10 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="tabular-nums">{items[0]?.currency || "Rs "}{formatAmount(subtotal)}</span>
+                  <span className="text-[#840608]/70">Subtotal</span>
+                  <span className="tabular-nums text-[#840608]">
+                    {items[0]?.currency || "Rs "}{formatAmount(subtotal)}
+                  </span>
                 </div>
-                <div className="space-y-2 rounded-xl border border-border p-3">
-                  <label className="text-xs font-semibold text-muted-foreground">Coupon code</label>
+
+                <div className="space-y-2 rounded-lg border border-[#840608]/15 p-3">
+                  <label className="text-xs font-semibold text-[#840608]/70">Coupon code</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="e.g. WELCOME10"
-                      className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-surface text-sm font-mono uppercase focus:outline-none focus:border-primary"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-md border border-[#840608]/20 bg-[#FFF8E7] text-sm font-mono uppercase text-[#840608] placeholder:text-[#840608]/40 focus:outline-none focus:border-[#840608]"
                       disabled={Boolean(appliedCoupon)}
                     />
                     {appliedCoupon ? (
                       <button
                         type="button"
                         onClick={clearCoupon}
-                        className="shrink-0 px-3 py-2 rounded-lg border border-border text-sm hover:bg-muted cursor-pointer"
+                        className={`shrink-0 px-3 py-2 rounded-md border border-[#840608]/20 bg-white text-sm text-[#840608] hover:bg-[#FFF8E7] cursor-pointer transition-colors ${focusRing}`}
                       >
                         Remove
                       </button>
@@ -981,67 +968,96 @@ export function CheckoutPage({ items, onConfirm, isSubmitting = false, submitErr
                         type="button"
                         onClick={applyCoupon}
                         disabled={couponBusy}
-                        className="shrink-0 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 cursor-pointer"
+                        className={`shrink-0 px-3 py-2 rounded-md bg-[#840608] text-[#F29C1F] text-sm font-medium hover:bg-[#5A1A10] disabled:opacity-60 cursor-pointer transition-colors ${focusRing}`}
                       >
                         {couponBusy ? "…" : "Apply"}
                       </button>
                     )}
                   </div>
                   {couponMsg ? (
-                    <p className={`text-xs ${appliedCoupon && couponDiscount > 0 ? "text-green-500" : "text-muted-foreground"}`}>
+                    <p
+                      className={`text-xs ${
+                        appliedCoupon && couponDiscount > 0
+                          ? "text-[#4E8A45] font-medium"
+                          : "text-[#840608]/60"
+                      }`}
+                    >
                       {couponMsg}
                     </p>
                   ) : null}
                 </div>
+
                 {(offerDiscount > 0 || appliedOfferTitle) ? (
-                  <div className="flex flex-col gap-0.5 text-green-600 dark:text-green-400">
+                  <div className="flex flex-col gap-0.5 text-[#4E8A45]">
                     <div className="flex justify-between">
                       <span className="truncate pr-2">
                         {appliedOfferTitle || "Offer"} discount
                       </span>
                       {offerDiscount > 0 ? (
-                        <span className="shrink-0 tabular-nums">−{items[0]?.currency || "Rs "}{formatAmount(offerDiscount)}</span>
+                        <span className="shrink-0 tabular-nums font-medium">
+                          −{items[0]?.currency || "Rs "}{formatAmount(offerDiscount)}
+                        </span>
                       ) : null}
                     </div>
                     {appliedOfferDetail ? (
-                      <p className="text-xs text-muted-foreground">{appliedOfferDetail}</p>
+                      <p className="text-xs text-[#840608]/60">{appliedOfferDetail}</p>
                     ) : null}
                   </div>
                 ) : null}
+
                 {couponDiscount > 0 ? (
-                  <div className="flex justify-between text-green-600 dark:text-green-400">
+                  <div className="flex justify-between text-[#4E8A45]">
                     <span>Coupon {appliedCoupon ? `(${appliedCoupon})` : ""}</span>
-                    <span className="tabular-nums">−{items[0]?.currency || "Rs "}{formatAmount(couponDiscount)}</span>
+                    <span className="tabular-nums">
+                      −{items[0]?.currency || "Rs "}{formatAmount(couponDiscount)}
+                    </span>
                   </div>
                 ) : null}
+
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span className="tabular-nums">{deliveryFee === 0 ? "Free" : (items[0]?.currency || "Rs ") + formatAmount(deliveryFee)}</span>
+                  <span className="text-[#840608]/70">Delivery</span>
+                  <span className="tabular-nums text-[#840608]">
+                    {deliveryFee === 0
+                      ? "Free"
+                      : (items[0]?.currency || "Rs ") + formatAmount(deliveryFee)}
+                  </span>
                 </div>
+
                 {freeDeliveryMessage ? (
-                  <p className="text-xs text-green-600 dark:text-green-400">{freeDeliveryMessage}</p>
+                  <p className="text-xs text-[#4E8A45]">{freeDeliveryMessage}</p>
                 ) : null}
+
                 {tax > 0 ? (
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">GST (extra)</span>
-                    <span className="tabular-nums">{items[0]?.currency || "Rs "}{formatAmount(tax)}</span>
+                    <span className="text-[#840608]/70">GST (extra)</span>
+                    <span className="tabular-nums text-[#840608]">
+                      {items[0]?.currency || "Rs "}{formatAmount(tax)}
+                    </span>
                   </div>
                 ) : taxInclusive > 0 ? (
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Tax</span>
-                    <span className="text-muted-foreground">Included in prices</span>
+                    <span className="text-[#840608]/70">Tax</span>
+                    <span className="text-[#840608]/60">Included in prices</span>
                   </div>
                 ) : null}
-                <div className="flex justify-between pt-3 border-t border-border font-bold text-base">
-                  <span>Total</span>
-                  <span className="text-primary tabular-nums">{items[0]?.currency || "Rs "}{formatAmount(total)}</span>
+
+                <div className="flex justify-between pt-3 border-t border-[#840608]/10 text-base font-bold">
+                  <span className="text-[#840608]">Total</span>
+                  <span className="text-[#840608] tabular-nums">
+                    {items[0]?.currency || "Rs "}{formatAmount(total)}
+                  </span>
                 </div>
               </div>
 
-              <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Phone className="h-3 w-3 text-primary shrink-0" />
-                  <span>Need help? Call <a href="tel:02136349898" className="text-foreground font-medium hover:underline">021-36349898</a></span>
+              <div className="mt-4 pt-4 border-t border-[#840608]/10">
+                <div className="flex items-center gap-2 text-xs text-[#840608]/60">
+                  <Phone className="h-3 w-3 shrink-0" />
+                  <span>
+                    Need help? Call{" "}
+                    <a href="tel:02132349898" className="text-[#840608] font-medium hover:underline">
+                      021-323-49898
+                    </a>
+                  </span>
                 </div>
               </div>
             </div>

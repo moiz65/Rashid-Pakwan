@@ -28,14 +28,15 @@ const links = [
 
 /*
   Palette, straight from the pot
-  --dn-deg      #3A0F0A  birista-brown / dark deg copper
+  --dn-deg      #840608  birista-brown / dark deg copper
   --dn-deg-2    #5A1A10  lifted brown for chips and hover
   --dn-zafran   #F29C1F  saffron rice
   --dn-zarda    #E4571B  orange zarda grains / chilli
   --dn-malai    #FFF1D0  cream, like basmati and raita
   --dn-pudina   #7FB069  mint and coriander green
 */
-/* ---------- Clip art (original inline SVGs, no image files needed) ---------- */
+
+/* ---------- Clip art (original inline SVGs) ---------- */
 function Handi({ steam = true, className = "" }: { steam?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 80 72" className={`dn-clip ${className}`} aria-hidden="true">
@@ -50,7 +51,7 @@ function Handi({ steam = true, className = "" }: { steam?: boolean; className?: 
       <path d="M18 38c0-9 10-12 22-12s22 3 22 12z" fill="#C8651B" />
       <rect x="13" y="36" width="54" height="7" rx="3.5" fill="#F29C1F" />
       {[20, 28, 36, 44, 52, 60].map((x) => (
-        <circle key={x} cx={x} cy="39.5" r="1.2" fill="#3A0F0A" />
+        <circle key={x} cx={x} cy="39.5" r="1.2" fill="#840608" />
       ))}
       <path d="M17 43h46c0 14-8 24-23 24S17 57 17 43z" fill="#B5541A" />
       <circle cx="11" cy="47" r="4" fill="none" stroke="#F29C1F" strokeWidth="3" />
@@ -110,7 +111,7 @@ const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Yatra+One&family=Hind:wght@400;500;600&display=swap');
 
 .dn-header {
-  --dn-deg: #3A0F0A;
+  --dn-deg: #840608;
   --dn-deg-2: #5A1A10;
   --dn-zafran: #F29C1F;
   --dn-zarda: #E4571B;
@@ -124,7 +125,6 @@ const styles = `
 
 .dn-display { font-family: 'Yatra One', 'Hind', serif; letter-spacing: 0.01em; }
 
-/* The one memorable thing: a stripe of zarda rice, saffron, orange, cream and mint grains */
 .dn-lattice {
   height: 10px;
   background:
@@ -136,7 +136,6 @@ const styles = `
     var(--dn-deg-2);
 }
 
-/* Logo is the deg lid: saffron rim, a dotted ring of rivets outside it (the dum seal) */
 .dn-thali {
   border: 3px solid var(--dn-zafran);
   outline: 3px dotted var(--dn-zafran);
@@ -180,7 +179,6 @@ const styles = `
   border: 1px solid color-mix(in srgb, var(--dn-zafran) 45%, transparent);
 }
 
-/* Desktop links: a saffron diamond marks the current section */
 .dn-link {
   position: relative; padding: 0.35rem 1rem;
   font-family: 'Yatra One', serif; font-size: 1rem;
@@ -197,7 +195,6 @@ const styles = `
 .dn-link[data-active="true"]::before { left: 0; }
 .dn-link[data-active="true"]::after { right: 0; }
 
-/* Mobile drawer reads like a menu card */
 .dn-drawer { background: var(--dn-malai); color: var(--dn-deg); border-top: 2px solid var(--dn-zafran); }
 .dn-mlink {
   display: flex; align-items: center; gap: 0.5rem;
@@ -207,7 +204,6 @@ const styles = `
 }
 .dn-mlink[data-active="true"] { background: var(--dn-deg); color: var(--dn-zafran); }
 
-/* Clip art */
 .dn-clip { display: block; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
 .dn-steam path { animation: dn-rise 3.2s ease-in-out infinite; transform-origin: center; }
 .dn-steam path:nth-child(2) { animation-delay: .5s; }
@@ -239,7 +235,6 @@ export function Navbar() {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  /* Active section / hash */
   useEffect(() => {
     const syncHash = () => {
       setActiveHash(window.location.hash || "#menu-products");
@@ -249,7 +244,6 @@ export function Navbar() {
     return () => window.removeEventListener("hashchange", syncHash);
   }, []);
 
-  /* Branch */
   useEffect(() => {
     const syncBranch = () => {
       const stored = getStoredDeliveryLocation();
@@ -264,7 +258,6 @@ export function Navbar() {
     return () => window.removeEventListener("branch-selected", syncBranch);
   }, [selectedBranchId]);
 
-  /* Phone */
   useEffect(() => {
     let active = true;
     fetchTrackingSettings()
@@ -311,25 +304,34 @@ export function Navbar() {
         {/* Zarda rice stripe */}
         <div className="dn-lattice" aria-hidden="true" />
 
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-4">
-          <div className="relative flex items-center justify-between gap-2 sm:gap-3 h-16 sm:h-[4.5rem]">
-            {/* LEFT: phone + branch */}
+        <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4">
+          {/*
+            Responsive header row:
+            - Mobile  (<sm):  branch chip | logo | cart + menu
+            - Tablet  (sm–lg): branch chip + phone | logo | cart + menu
+            - Desktop (lg+):  branch chip + phone | logo | track + cart + menu
+            - XL+:            clipart flanking the logo
+          */}
+          <div className="relative flex items-center justify-between gap-2 sm:gap-3 h-14 sm:h-16 lg:h-[4.5rem]">
+            {/* LEFT: phone + branch chip */}
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+              {/* Phone chip: hidden on mobile, visible md+ */}
               {phone ? (
                 <a
                   href={`tel:${phone.replace(/\s+/g, "")}`}
-                  className="dn-chip hidden sm:inline-flex shrink-0"
+                  className="dn-chip hidden md:inline-flex shrink-0"
                 >
                   <Phone className="h-3.5 w-3.5" style={{ color: "var(--dn-zafran)" }} />
-                  <span>{phone}</span>
+                  <span className="hidden lg:inline">{phone}</span>
                 </a>
               ) : null}
 
+              {/* Branch chip: always visible, truncates on mobile */}
               <button
                 type="button"
                 onClick={openBranchPicker}
                 title="Change branch"
-                className="dn-chip max-w-[8.5rem] sm:max-w-[14rem] shrink-0 cursor-pointer"
+                className="dn-chip max-w-[7rem] sm:max-w-[11rem] md:max-w-[14rem] lg:max-w-[16rem] shrink-0 cursor-pointer"
               >
                 <MapPin
                   className="h-3.5 w-3.5 shrink-0"
@@ -340,10 +342,14 @@ export function Navbar() {
               </button>
             </div>
 
-            {/* CENTER: logo as the deg lid */}
+            {/* CENTER: logo — scales fluidly */}
             <div className="absolute left-1/2 -translate-x-1/2 z-20">
-              <Link to="/" className="flex items-center justify-center" aria-label="Studio 7teas home">
-                <div className="dn-thali h-12 w-12 sm:h-[62px] sm:w-[62px] lg:h-[70px] lg:w-[70px] rounded-full flex items-center justify-center overflow-hidden">
+              <Link
+                to="/"
+                className="flex items-center justify-center"
+                aria-label="Studio 7teas home"
+              >
+                <div className="dn-thali h-11 w-11 sm:h-14 sm:w-14 md:h-16 md:w-16 lg:h-[68px] lg:w-[68px] xl:h-[72px] xl:w-[72px] rounded-full flex items-center justify-center overflow-hidden">
                   <img
                     src={logo}
                     alt="Studio 7teas"
@@ -353,19 +359,26 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* CLIP ART flanking the logo (wide screens) */}
-            <div className="pointer-events-none absolute right-1/2 mr-[58px] top-1/2 -translate-y-1/2 hidden xl:flex items-end gap-3" aria-hidden="true">
-              <StarAnise className="h-7 w-7 -rotate-12" />
-              <Handi className="h-14 w-14" />
+            {/* CLIPART FLANKING LOGO — only XL+ where there's space */}
+            <div
+              className="pointer-events-none absolute right-1/2 mr-[60px] xl:mr-[68px] top-1/2 -translate-y-1/2 hidden xl:flex items-end gap-3"
+              aria-hidden="true"
+            >
+              <StarAnise className="h-6 w-6 -rotate-12" />
+              <Handi className="h-12 w-12" />
             </div>
-            <div className="pointer-events-none absolute left-1/2 ml-[58px] top-1/2 -translate-y-1/2 hidden xl:flex items-end gap-3" aria-hidden="true">
-              <Chili className="h-10 w-10" />
+            <div
+              className="pointer-events-none absolute left-1/2 ml-[60px] xl:ml-[68px] top-1/2 -translate-y-1/2 hidden xl:flex items-end gap-3"
+              aria-hidden="true"
+            >
+              <Chili className="h-9 w-9" />
               <Lemon className="h-8 w-9" />
-              <Mint className="h-9 w-9 -rotate-6" />
+              <Mint className="h-8 w-8 -rotate-6" />
             </div>
 
-            {/* RIGHT: track, cart, menu */}
+            {/* RIGHT: track + cart + menu */}
             <div className="flex items-center justify-end gap-1.5 sm:gap-2 ml-auto flex-1">
+              {/* Track order input: only lg+ where there's horizontal room */}
               <div className="hidden lg:flex items-center gap-2 mr-1">
                 <input
                   type="text"
@@ -374,14 +387,15 @@ export function Navbar() {
                   value={trackOrderId}
                   onChange={(e) => setTrackOrderId(e.target.value.toUpperCase())}
                   onKeyDown={(e) => e.key === "Enter" && handleTrackOrder()}
-                  className="dn-input h-8 w-44"
+                  className="dn-input h-8 w-40 xl:w-44"
                 />
                 <button onClick={handleTrackOrder} className="dn-chip cursor-pointer">
                   <Search className="h-3.5 w-3.5" />
-                  Track
+                  <span className="hidden xl:inline">Track</span>
                 </button>
               </div>
 
+              {/* Cart: icon-only on mobile, icon+label on sm+ */}
               <button
                 onClick={() => setIsCartOpen(true)}
                 aria-label="Open cart"
@@ -404,6 +418,7 @@ export function Navbar() {
                 )}
               </button>
 
+              {/* Mobile menu toggle: only below md */}
               <button
                 onClick={() => setOpen((v) => !v)}
                 className="dn-icon-btn md:hidden grid place-items-center h-9 w-9 rounded-full cursor-pointer"
@@ -414,24 +429,6 @@ export function Navbar() {
               </button>
             </div>
           </div>
-
-          {/* DESKTOP NAV (kept commented out, as in your version) */}
-          {/*           <nav
-            aria-label="Page sections"
-            className="hidden md:flex items-center justify-center gap-3 pb-2.5 pt-1"
-          >
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                data-active={activeHash === l.href}
-                aria-current={activeHash === l.href ? "location" : undefined}
-                className="dn-link"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav> */}
         </div>
 
         {/* MOBILE MENU */}
@@ -491,7 +488,7 @@ export function Navbar() {
                 <a
                   href={`tel:${phone.replace(/\s+/g, "")}`}
                   onClick={() => setOpen(false)}
-                  className="dn-mlink sm:hidden"
+                  className="dn-mlink md:hidden"
                   style={{ borderBottom: "none" }}
                 >
                   <Phone className="h-4 w-4" />
@@ -502,14 +499,24 @@ export function Navbar() {
             <div className="dn-lattice" aria-hidden="true" />
           </motion.div>
         )}
-        {/* Garnish hanging under the header (smaller screens) */}
-        <div className="pointer-events-none absolute top-full inset-x-0 flex justify-between px-3 sm:px-6 xl:hidden" aria-hidden="true">
+
+        {/*
+          Garnish hanging under the header.
+          Hidden on mobile (< lg). Visible only from lg+ where there's
+          enough horizontal space for the clips to sit under the header
+          without overlapping the page content below.
+          Completely hidden on xl+ where the flanking clipart takes over.
+        */}
+        <div
+          className="pointer-events-none absolute top-full inset-x-0 hidden lg:flex xl:hidden justify-between px-6"
+          aria-hidden="true"
+        >
           <div className="flex items-start gap-2">
             <Handi steam={false} className="h-9 w-9 -mt-0.5" />
-            <Chili className="hidden sm:block h-7 w-7 mt-1" />
+            <Chili className="h-7 w-7 mt-1" />
           </div>
           <div className="flex items-start gap-2">
-            <Mint className="hidden sm:block h-7 w-7 mt-1 -rotate-6" />
+            <Mint className="h-7 w-7 mt-1 -rotate-6" />
             <Lemon className="h-6 w-7 mt-1" />
           </div>
         </div>
