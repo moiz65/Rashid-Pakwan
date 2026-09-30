@@ -219,7 +219,7 @@ export function ProductSection({
               role="dialog"
               aria-modal="true"
               aria-label={selectedProduct.name}
-              className="relative bg-[#FFF8E7] rounded-3xl max-w-4xl w-full max-h-[70vh] overflow-y-auto border-t-4 border-[#F29C1F] shadow-2xl text-[#840608]"
+              className="relative bg-[#F5f5f5] rounded-3xl max-w-4xl w-full max-h-[70vh] overflow-y-auto border-t-4 border-[#F29C1F] shadow-2xl text-[#840608]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -231,7 +231,7 @@ export function ProductSection({
               </button>
 
               <div className="grid md:grid-cols-2 gap-6 p-6">
-                <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#FFF1D0] border border-[#840608]/15">
+                <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#F5F5F5] border border-[#840608]/15">
                   {selectedProduct.src ? (
                     <img
                       src={selectedProduct.src}
@@ -242,6 +242,7 @@ export function ProductSection({
                 </div>
 
                 <div className="flex flex-col gap-4">
+                  {/* ---- Header / info ---- */}
                   <div>
                     <h2 className="text-2xl font-bold">{selectedProduct.name}</h2>
                     <p className="text-sm text-[#000] mt-1">{selectedProduct.desc}</p>
@@ -266,6 +267,7 @@ export function ProductSection({
                       )}
                   </div>
 
+                  {/* ---- Variations (size picker) ---- */}
                   {variations.length > 0 && (
                     <div className="border-t border-dashed border-[#840608]/25 pt-4">
                       <h3 className="text-sm font-semibold mb-3">Choose size</h3>
@@ -322,39 +324,20 @@ export function ProductSection({
                     </div>
                   )}
 
-                  {drinkOptions.length > 0 && (
-                    <div className="border-t border-dashed border-[#840608]/25 pt-4">
-                      <h3 className="text-sm font-semibold mb-2">Add a drink</h3>
-                      <p className="text-xs text-[#000] mb-2">
-                        Optional. Pick one to add with this item.
-                      </p>
-                      <select
-                        value={selectedDrinkId}
-                        onChange={(e) => setSelectedDrinkId(e.target.value)}
-                        aria-label="Add a drink"
-                        className={`w-full px-3 py-2.5 rounded-xl border border-[#840608]/25 bg-[#FFF1D0] text-sm focus:outline-none focus:border-[#840608] ${focusRing}`}
-                      >
-                        <option value="">No drink</option>
-                        {drinkOptions.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.name} ({selectedProduct.currency}
-                            {formatAmount(d.price || 0)})
-                          </option>
-                        ))}
-                      </select>
-                      {selectedDrink?.image ? (
-                        <div className="mt-2 flex items-center gap-2 text-xs text-[#0000]">
-                          <img
-                            src={resolveMediaUrl(selectedDrink.image)}
-                            alt=""
-                            className="h-8 w-8 rounded-lg object-cover"
-                          />
-                          {selectedDrink.name}
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
+                  {/* ---- Special instructions (moved up) ---- */}
+                  <div className="border-t border-dashed border-[#840608]/25 pt-4">
+                    <h3 className="text-sm font-semibold mb-2">Special instructions</h3>
+                    <textarea
+                      value={specialInstructions}
+                      onChange={(e) => setSpecialInstructions(e.target.value)}
+                      aria-label="Special instructions"
+                      placeholder="Add any special requests..."
+                      className={`w-full px-3 py-2 rounded-xl border border-[#840608]/25 bg-[#FFF] text-sm focus:outline-none focus:border-[#840608] transition-colors resize-none ${focusRing}`}
+                      rows={2}
+                    />
+                  </div>
 
+                  {/* ---- Add-ons (extras) ---- */}
                   {availableAddons.length > 0 && (
                     <div className="border-t border-dashed border-[#840608]/25 pt-4">
                       <h3 className="text-sm font-semibold mb-3">Add-ons</h3>
@@ -362,7 +345,7 @@ export function ProductSection({
                         {availableAddons.map((addon) => (
                           <div
                             key={addon.id}
-                            className="flex items-center justify-between p-3 rounded-xl border border-[#840608]/15 bg-[#FFF1D0]"
+                            className="flex items-center justify-between p-3 rounded-xl border border-[#840608]/15 bg-[#FFF] transition-colors hover:border-[#840608]/45"
                           >
                             <div className="flex min-w-0 items-center gap-3">
                               <span className="text-sm">{addon.name}</span>
@@ -415,18 +398,41 @@ export function ProductSection({
                     </div>
                   )}
 
-                  <div className="border-t border-dashed border-[#840608]/25 pt-4">
-                    <h3 className="text-sm font-semibold mb-2">Special instructions</h3>
-                    <textarea
-                      value={specialInstructions}
-                      onChange={(e) => setSpecialInstructions(e.target.value)}
-                      aria-label="Special instructions"
-                      placeholder="Add any special requests..."
-                      className={`w-full px-3 py-2 rounded-xl border border-[#840608]/25 bg-[#FFF1D0] text-sm focus:outline-none focus:border-[#840608] transition-colors resize-none ${focusRing}`}
-                      rows={2}
-                    />
-                  </div>
+                  {/* ---- Add a drink (moved to bottom) ---- */}
+                  {drinkOptions.length > 0 && (
+                    <div className="border-t border-dashed border-[#840608]/25 pt-4">
+                      <h3 className="text-sm font-semibold mb-2">Add a drink</h3>
+                      <p className="text-xs text-[#000] mb-2">
+                        Optional. Pick one to add with this item.
+                      </p>
+                      <select
+                        value={selectedDrinkId}
+                        onChange={(e) => setSelectedDrinkId(e.target.value)}
+                        aria-label="Add a drink"
+                        className={`w-full px-3 py-2.5 rounded-xl border border-[#840608]/25 bg-[#FFF1D0] text-sm focus:outline-none focus:border-[#840608] ${focusRing}`}
+                      >
+                        <option value="">No drink</option>
+                        {drinkOptions.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.name} ({selectedProduct.currency}
+                            {formatAmount(d.price || 0)})
+                          </option>
+                        ))}
+                      </select>
+                      {selectedDrink?.image ? (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-[#840608]/65">
+                          <img
+                            src={resolveMediaUrl(selectedDrink.image)}
+                            alt=""
+                            className="h-8 w-8 rounded-lg object-cover"
+                          />
+                          {selectedDrink.name}
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
 
+                  {/* ---- Quantity + Add to cart ---- */}
                   <div className="border-t border-dashed border-[#840608]/25 pt-4 mt-auto">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1 bg-[#FFF1D0] rounded-full border border-[#840608]/25 p-1">
@@ -449,7 +455,7 @@ export function ProductSection({
 
                       <button
                         onClick={handleAddToCart}
-                        className={`flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#840608] text-[#Fff] font-semibold hover:bg-[#5A1A10] active:scale-[0.99] transition-colors cursor-pointer ${focusRing}`}
+                        className={`flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#840608] text-[#fff] font-semibold hover:bg-[#5A1A10] active:scale-[0.99] transition-colors cursor-pointer ${focusRing}`}
                       >
                         <ShoppingBag className="h-4 w-4" />
                         <span>Add to cart</span>

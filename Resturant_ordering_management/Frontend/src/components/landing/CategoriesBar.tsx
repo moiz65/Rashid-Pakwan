@@ -10,6 +10,7 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
+  const [isOverflowing, setIsOverflowing] = useState(false);
   const categories = useMenuStore((s) => s.categories);
   const products = useMenuStore((s) => s.products);
   const activeCategorySlug = useMenuStore((s) => s.activeCategorySlug);
@@ -47,8 +48,29 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
       setShowLeft(scrollLeft > 20);
       setShowRight(scrollLeft < scrollWidth - clientWidth - 20);
+      setIsOverflowing(scrollWidth > clientWidth + 4);
     }
   };
+
+  // Track overflow on mount, resize, and when chips change
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => {
+      const { scrollWidth, clientWidth } = el;
+      setIsOverflowing(scrollWidth > clientWidth + 4);
+      setShowRight(el.scrollLeft < scrollWidth - clientWidth - 20);
+      setShowLeft(el.scrollLeft > 20);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    window.addEventListener("resize", check);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, [chips.length]);
 
   if (chips.length <= 1) return null;
 
@@ -56,7 +78,7 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
   const isAllActive = !activeCategorySlug;
 
   const arrowClass =
-    "absolute z-10 h-7 w-7 rounded-full bg-[#FFF1D0] text-[#840608] border border-[#840608]/15 flex items-center justify-center hover:bg-[#F29C1F] hover:text-[#840608] transition-colors cursor-pointer shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
+    "absolute z-20 h-7 w-7 rounded-full bg-[#FFF1D0] text-[#840608] border border-[#840608]/15 flex items-center justify-center hover:bg-[#F29C1F] hover:text-[#840608] transition-colors cursor-pointer shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F29C1F]";
 
   return (
     <div
@@ -64,7 +86,7 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
         sticky ? "sticky top-[74px] sm:top-[80px] md:top-[115px] lg:top-[115px] z-40" : ""
       }`}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative py-2.5 flex items-center">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative py-2.5 flex items-center justify-center">
         {showLeft && (
           <button
             onClick={() => scroll("left")}
@@ -78,7 +100,9 @@ export function Categories({ sticky = false }: { sticky?: boolean }) {
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex items-center gap-2 overflow-x-auto scrollbar-hide w-full py-0.5 px-6"
+          className={`flex items-center gap-2 overflow-x-auto scrollbar-hide w-full py-0.5 px-6 ${
+            isOverflowing ? "justify-start" : "justify-center"
+          }`}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {chips.map((category) => {
